@@ -1,0 +1,5 @@
+#jobs
+ca.dealsaccess.holt.jobs.CounterBoltJob = counterJob : Display message from kafka spout and count them.
+ca.dealsaccess.holt.jobs.SaveRedisJob = saveRedisJob : get message from kafka spout and save to the redis. 
+ca.dealsaccess.holt.jobs.LogStatsJob = logStatsJob : analysis log data from redis to generate statistic results, then save them to redis.
+#ca.dealsaccess.holt.jobs.SaveCassandraJob = saveCassandraJob : get data from redis and save them to the cassandra.
