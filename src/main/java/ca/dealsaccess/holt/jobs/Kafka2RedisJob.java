@@ -16,21 +16,20 @@ import storm.kafka.KafkaSpout;
 import ca.dealsaccess.holt.common.AbstractConfig.ConfigException;
 import ca.dealsaccess.holt.common.AbstractStormJob;
 import ca.dealsaccess.holt.common.KafkaConfig;
-import ca.dealsaccess.holt.common.RedisConfig;
 import ca.dealsaccess.holt.common.RedisConstants;
 import ca.dealsaccess.holt.kafka.KafkaSpoutFactory;
 import ca.dealsaccess.holt.redis.RedisUtils;
 import ca.dealsaccess.holt.storm.bolt.LogRedisBolt;
 
-public final class SaveRedisJob extends AbstractStormJob {
+public final class Kafka2RedisJob extends AbstractStormJob {
 
-	private static final Logger LOG = LoggerFactory.getLogger(SaveRedisJob.class);
+	private static final Logger LOG = LoggerFactory.getLogger(Kafka2RedisJob.class);
 
 	private boolean isLocal = true;
-
+	
 	public static void main(String[] args) {
 		
-		SaveRedisJob main = new SaveRedisJob();
+		Kafka2RedisJob main = new Kafka2RedisJob();
 		try {
 			main.run(args);
 		} catch (ConfigException e) {
@@ -57,6 +56,7 @@ public final class SaveRedisJob extends AbstractStormJob {
 
 		Config conf = new Config();
 		conf.setDebug(true);
+		conf.put(RedisConstants.REDIS_KEY, getOption("topic"));
 		
 		RedisUtils.configRedis(conf);
 		

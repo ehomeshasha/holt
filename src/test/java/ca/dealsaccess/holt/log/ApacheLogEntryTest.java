@@ -1,7 +1,5 @@
 package ca.dealsaccess.holt.log;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 
 import com.google.gson.Gson;

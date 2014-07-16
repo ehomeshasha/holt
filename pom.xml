@@ -12,7 +12,6 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<storm.kafka.version>0.9.1-incubating</storm.kafka.version>
 		<storm.version>0.9.1-incubating</storm.version>
 		<kafka.version>0.8.1.1</kafka.version>
 		<flume.version>1.5.0</flume.version>
@@ -97,9 +96,6 @@
 			<resource>
 				<directory>conf</directory>
 			</resource>
-			<resource>
-				<directory>conf/driver</directory>
-			</resource>
 		</resources>
 	</build>
 
@@ -136,12 +132,15 @@
 		</repository>
 	</repositories>
 
+
 	<dependencies>
+		 
 		<dependency>
-            <groupId>org.apache.storm</groupId>
-            <artifactId>storm-kafka</artifactId>
-            <version>${storm.kafka.version}</version>
+            <groupId>storm.kafka</groupId>
+            <artifactId>storm-kafka-plus</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
         </dependency>
+        
 		<dependency>
 			<groupId>org.apache.storm</groupId>
 			<artifactId>storm-core</artifactId>
@@ -224,6 +223,7 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.11</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>

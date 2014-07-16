@@ -18,7 +18,6 @@ import ca.dealsaccess.holt.common.AbstractStormJob;
 import ca.dealsaccess.holt.common.KafkaConfig;
 import ca.dealsaccess.holt.kafka.KafkaSpoutFactory;
 import ca.dealsaccess.holt.redis.RedisUtils;
-import ca.dealsaccess.holt.storm.bolt.CounterBolt;
 import ca.dealsaccess.holt.storm.bolt.LogRedisBolt;
 import ca.dealsaccess.holt.storm.spout.LogSpout;
 
@@ -100,7 +99,7 @@ public final class LogStatsJob extends AbstractStormJob {
 		TopologyBuilder builder = new TopologyBuilder();
 		
 		builder.setSpout("logSpout", new LogSpout(), 2);
-		builder.setBolt("counterBolt", new CounterBolt(), 1).shuffleGrouping("kafkaSpout");
+		//builder.setBolt("counterBolt", new CounterBolt(), 1).shuffleGrouping("kafkaSpout");
 		//builder.setBolt("logRedisBolt", new LogRedisBolt(), 1).shuffleGrouping("kafkaSpout");
 		// builder.setBolt("split", new SplitSentence(),
 		// 8).shuffleGrouping("kafkaSpout");

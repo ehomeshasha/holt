@@ -11,7 +11,7 @@ public class RedisUtils {
 		RedisConfig redisConfig = new RedisConfig(true);
 		redisConfig.parseProperties();
 		String host = redisConfig.getRedisHost() == null ? RedisConstants.REDIS_HOST_DEFAULT_VALUE : redisConfig.getRedisHost();
-		String port = redisConfig.getRedisPort() == -1 ? RedisConstants.REDIS_PORT_DEFAULT_VALUE : String.valueOf(redisConfig.getRedisHost());
+		String port = redisConfig.getRedisPort() == -1 ? RedisConstants.REDIS_PORT_DEFAULT_VALUE : String.valueOf(redisConfig.getRedisPort());
 		conf.put(RedisConstants.REDIS_HOST, host);
 		conf.put(RedisConstants.REDIS_PORT, port);
 	}

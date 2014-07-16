@@ -17,18 +17,17 @@ import ca.dealsaccess.holt.common.AbstractConfig.ConfigException;
 import ca.dealsaccess.holt.common.AbstractStormJob;
 import ca.dealsaccess.holt.common.KafkaConfig;
 import ca.dealsaccess.holt.kafka.KafkaSpoutFactory;
+import ca.dealsaccess.holt.storm.bolt.PrinterBolt;
 
-import ca.dealsaccess.holt.storm.bolt.CounterBolt;
+public final class PrinterJob extends AbstractStormJob {
 
-public final class CounterBoltJob extends AbstractStormJob {
-
-	private static final Logger LOG = LoggerFactory.getLogger(CounterBoltJob.class);
+	private static final Logger LOG = LoggerFactory.getLogger(PrinterJob.class);
 
 	private boolean isLocal = true;
 
 	public static void main(String[] args) {
 		
-		CounterBoltJob main = new CounterBoltJob();
+		PrinterJob main = new PrinterJob();
 		try {
 			main.run(args);
 		} catch (ConfigException e) {
@@ -90,7 +89,7 @@ public final class CounterBoltJob extends AbstractStormJob {
 
 		TopologyBuilder builder = new TopologyBuilder();
 		builder.setSpout("kafkaSpout", kafkaSpout, 2);
-		builder.setBolt("counter", new CounterBolt(), 1).shuffleGrouping("kafkaSpout");
+		builder.setBolt("counter", new PrinterBolt(), 1).shuffleGrouping("kafkaSpout");
 		// builder.setBolt("split", new SplitSentence(),
 		// 8).shuffleGrouping("kafkaSpout");
 		// builder.setBolt("count", new WordCount(), 12).fieldsGrouping("split",

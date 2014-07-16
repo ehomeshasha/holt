@@ -1,6 +1,14 @@
 #!/bin/bash
 
-#bin/run-storm.sh --topic test-log2
+#Valid program names are:
+#  counterJob: : Display message from kafka spout and count them.
+#  logStatsJob: : analysis log data from redis to generate statistic results, then save them to redis.
+#  saveRedisJob: : get message from kafka spout and save to the redis.
+
+
+
+#bin/run-storm.sh counterJob --topic test-log
+#bin/run-storm.sh saveRedisJob --topic access-log
 
 # some directories
 THIS="$0"
