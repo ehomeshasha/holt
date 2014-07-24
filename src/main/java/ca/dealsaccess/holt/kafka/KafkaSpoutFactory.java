@@ -11,6 +11,7 @@ import storm.kafka.SpoutConfig;
 import storm.kafka.StringScheme;
 import storm.kafka.ZkHosts;
 import storm.kafka.trident.OpaqueTridentKafkaSpout;
+import storm.kafka.trident.TransactionalTridentKafkaSpout;
 import storm.kafka.trident.TridentKafkaConfig;
 import backtype.storm.spout.SchemeAsMultiScheme;
 import ca.dealsaccess.holt.common.AbstractConfig.ConfigException;
@@ -31,7 +32,25 @@ public class KafkaSpoutFactory {
 		return kafkaSpout;
 	}
 	
-	public static KafkaSpout createKafkaSpout(KafkaConfig config) throws ConfigException, IOException {
+	public static TransactionalTridentKafkaSpout createTransactionalTridentKafkaSpout(KafkaConfig config) throws IOException {
+		
+		String hosts = config.getZkHostsString();
+		String topic = config.getKafkaTopic();
+		String zkRoot = "/"+config.getKafkaTopic();
+		String id = "storm";
+		String[] spoutConifgParameters = { hosts, topic, zkRoot, id};
+		LOG.info("SpoutConfig: {zkHosts: {}, topic: {}, zkRoot: {}, id: {}}", spoutConifgParameters);
+		
+		ZKClient zkClient = new ZKClient(config.getZkHostsList());
+		zkClient.createZnode(zkRoot+"/"+id);
+		
+		BrokerHosts brokerHosts = new ZkHosts(config.getZkHostsString());
+		TridentKafkaConfig kafkaConfig = new TridentKafkaConfig(brokerHosts, topic, id);
+        kafkaConfig.scheme = new SchemeAsMultiScheme(new StringScheme());
+        return new TransactionalTridentKafkaSpout(kafkaConfig);
+	}
+	
+	public static KafkaSpout createKafkaSpout(KafkaConfig config) throws IOException {
 		
 		String hosts = config.getZkHostsString();
 		String topic = config.getKafkaTopic();

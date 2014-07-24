@@ -7,7 +7,7 @@ import ca.dealsaccess.holt.common.AbstractConfig.ConfigException;
 
 public class RedisUtils {
 	
-	public static void configRedis(Config conf) throws ConfigException {
+	public static void configure(Config conf) throws ConfigException {
 		RedisConfig redisConfig = new RedisConfig(true);
 		redisConfig.parseProperties();
 		String host = redisConfig.getRedisHost() == null ? RedisConstants.REDIS_HOST_DEFAULT_VALUE : redisConfig.getRedisHost();
@@ -15,4 +15,14 @@ public class RedisUtils {
 		conf.put(RedisConstants.REDIS_HOST, host);
 		conf.put(RedisConstants.REDIS_PORT, port);
 	}
+	
+	public static RedisConfig getRedisConfig() throws ConfigException {
+		RedisConfig redisConfig = new RedisConfig(true);
+		redisConfig.parseProperties();
+		return redisConfig;
+	}
+	
+	
+	
+	
 }

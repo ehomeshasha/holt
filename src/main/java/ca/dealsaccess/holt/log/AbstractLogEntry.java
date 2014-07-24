@@ -3,9 +3,10 @@ package ca.dealsaccess.holt.log;
 import java.util.Date;
 import java.util.regex.Pattern;
 
+
 public abstract class AbstractLogEntry {
 	
-	protected final String logText;
+	protected String logText;
 	
 	protected String ip;
 	
@@ -21,24 +22,28 @@ public abstract class AbstractLogEntry {
 	
 	protected String protocol;
 	
-	protected String suffix;
+	protected String extension;
 	
 	protected int statusCode;
 	
 	protected int responseSize;
 	
-	protected static Pattern whiteSpace = Pattern.compile("\\s+");
+	protected static final Pattern whiteSpace = Pattern.compile("\\s+");
 	
-	protected static Pattern slash = Pattern.compile("/");
+	protected static final Pattern slash = Pattern.compile("/");
 	
-	protected static Pattern datePattern = Pattern.compile("\\[([^\\[\\]]+)\\]");
+	protected static final Pattern datePattern = Pattern.compile("\\[([^\\[\\]]+)\\]");
 	
-	protected static Pattern urlPattern = Pattern.compile("\"([^\\s]+)\\s([^\\s]+)\\s([^\\s]+)\"");
+	protected static final Pattern urlPattern = Pattern.compile("\"([^\\s]+)\\s([^\\s]+)\\s([^\\s]+)\"");
 	
 	public AbstractLogEntry(String logText) {
 		this.logText = logText;
 	}
 	
+	public AbstractLogEntry() {
+		
+	}
+
 	public abstract void parseLogText();
 	
 	protected class LogEntryException extends Exception {
@@ -94,8 +99,8 @@ public abstract class AbstractLogEntry {
 		return protocol;
 	}
 
-	public String getSuffix() {
-		return suffix;
+	public String getExtension() {
+		return extension;
 	}
 
 	public int getStatusCode() {

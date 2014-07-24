@@ -1,6 +1,28 @@
 #!/bin/bash
 
-ps -ef | grep "zookeeper.properties" | awk {'print $2'} | xargs kill -9
-ps -ef | grep "server.properties" | awk {'print $2'} | xargs kill -9
-ps -ef | grep "storm" | awk {'print $2'} | xargs kill -9
-ps -ef | grep "$KAFKA_HOME/libs/" | awk {'print $2'} | xargs kill -9
+
+#stop kafka server
+${KAFKA_HOME}/bin/kafka-server-stop.sh
+#ps ax | grep -i 'kafka\.Kafka' | grep java | grep -v grep | awk '{print $1}' | xargs kill -SIGINT
+
+#stop cassandra opscenter
+echo zzy8945620 | sudo -u root -S service opscenterd stop 
+
+#stop cassandra
+set -x
+echo zzy8945620 | sudo -u root -S /etc/init.d/cassandra stop 
+
+#stop storm nimus, supervisor, ui
+ps -ef | grep "storm" | grep -v grep | awk {'print $2'} | xargs kill -15
+
+#start redis
+ps -ef | grep "redis-server" | grep -v grep | awk {'print $2'} | xargs kill -15
+
+
+#stop zookeeper server
+#${KAFKA_HOME}/bin/zookeeper-server-stop.sh
+ps ax | grep -i 'zookeeper' | grep -v grep | awk '{print $1}' | xargs kill -15
+
+#stop flume agent
+ps -ef | grep "flume-kafka-conf.properties" | grep -v grep | awk {'print $2'} | xargs kill -SIGINT
+

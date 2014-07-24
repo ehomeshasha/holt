@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableMap;
  */
 public class KafkaSink extends AbstractSink implements Configurable {
     
-	private static final Logger LOGGER = LoggerFactory.getLogger(KafkaSink.class);
+	private static final Logger LOG = LoggerFactory.getLogger(KafkaSink.class);
 
 	private Properties parameters;
     
@@ -90,8 +90,8 @@ public class KafkaSink extends AbstractSink implements Configurable {
 	                data = new KeyedMessage<String, String>(topic, partitionKey, eventData);
 	            }
 	
-	            if (LOGGER.isInfoEnabled()) {
-	                LOGGER.info("Send Message to Kafka : [" + eventData + "] -- [" + EventHelper.dumpEvent(event) + "]");
+	            if (LOG.isInfoEnabled()) {
+	            	LOG.info("Send Message to Kafka : [" + eventData + "] -- [" + EventHelper.dumpEvent(event) + "]");
 	            }
 	
 	            producer.send(data);

@@ -3,6 +3,7 @@ package ca.dealsaccess.holt.storm.bolt;
 import java.util.Map;
 
 import ca.dealsaccess.holt.common.RedisConstants;
+import ca.dealsaccess.holt.log.LogConstants;
 import redis.clients.jedis.Jedis;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -10,6 +11,7 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
 
 @SuppressWarnings("serial")
 public class LogRedisBolt extends BaseRichBolt {
@@ -40,12 +42,12 @@ public class LogRedisBolt extends BaseRichBolt {
 	public void execute(Tuple input) {
 		String logText = input.getString(0);
 		jedis.rpush(key, logText);
-		
+		collector.emit(new Values(logText));
 		collector.ack(input);
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("logText"));   
+		declarer.declare(new Fields(LogConstants.LOG_TEXT));   
 	}
 }

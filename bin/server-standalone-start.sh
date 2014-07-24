@@ -26,9 +26,9 @@ fi
 
 #start zookeeper
 nohup zookeeper-server-start.sh $KAFKA_HOME/config/zookeeper.properties &
-#start kafka server
-nohup kafka-server-start.sh $KAFKA_HOME/config/server.properties &
 
+#start redis
+nohup /home/hadoop-user/scout_workspace/redis-stable/src/redis-server &
 
 #start storm nimbus
 nohup storm nimbus &
@@ -36,3 +36,13 @@ nohup storm nimbus &
 nohup storm supervisor &
 #start storm ui
 nohup storm ui &
+
+#start cassandra
+echo zzy8945620 | sudo -u root -S /etc/init.d/cassandra start
+
+#start cassandra opscenter
+echo zzy8945620 | sudo -u root -S service opscenterd start
+
+#start kafka server
+kafka-server-start.sh $KAFKA_HOME/config/server.properties
+

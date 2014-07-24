@@ -83,7 +83,7 @@ if [ "x$KAFKA_TOPIC" = "x" ];then
 fi
 
 #delete all existing flume-ng first
-ps -ef | grep "$KAFKA_HOME/libs/" | awk {'print $2'} | xargs kill -9
+ps -ef | grep "$KAFKA_HOME/libs/" | awk {'print $2'} | xargs kill -15
 
 
 

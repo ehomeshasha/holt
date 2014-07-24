@@ -18,7 +18,7 @@ public class RedisDataTest {
 	private static final String key = "access-log";
 	
 	@Test
-	public void fetchRedisListData() {
+	public void fetchListbyKey() {
 		
 		jedis = new Jedis(redisHost, redisPort);
 		jedis.connect();

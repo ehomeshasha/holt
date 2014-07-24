@@ -5,6 +5,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.regex.Matcher;
 
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +13,10 @@ import org.slf4j.LoggerFactory;
 public class ApacheLogEntry extends AbstractLogEntry {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(ApacheLogEntry.class);
+	
+	public ApacheLogEntry() {
+		
+	}
 	
 	public ApacheLogEntry(String logText) {
 		super(logText);
@@ -53,6 +58,7 @@ public class ApacheLogEntry extends AbstractLogEntry {
 			method = dateMatcher.group(1);
 			url = dateMatcher.group(2);
 			protocol = dateMatcher.group(3);
+			extension = FilenameUtils.getExtension(url);
 			
 			return tmpStr.replaceFirst(urlPattern.toString(), "");
 		} else {
