@@ -17,7 +17,6 @@ import storm.kafka.KafkaSpout;
 import storm.kafka.StringScheme;
 import storm.kafka.trident.TransactionalTridentKafkaSpout;
 import storm.trident.TridentTopology;
-import storm.trident.testing.Split;
 import ca.dealsaccess.holt.common.AbstractConfig.ConfigException;
 import ca.dealsaccess.holt.common.AbstractStormJob;
 import ca.dealsaccess.holt.common.KafkaConfig;
@@ -27,7 +26,6 @@ import ca.dealsaccess.holt.log.LogConstants;
 import ca.dealsaccess.holt.redis.RedisUtils;
 import ca.dealsaccess.holt.storm.bolt.LogRedisBolt;
 import ca.dealsaccess.holt.trident.function.LogRedisFunction;
-import ca.dealsaccess.holt.util.test.URLStreamSpoutTest;
 
 public final class Kafka2RedisJob extends AbstractStormJob {
 
@@ -133,23 +131,10 @@ public final class Kafka2RedisJob extends AbstractStormJob {
 		TransactionalTridentKafkaSpout tridentKafkaSpout = buildTridentKafkaSpout();
 		
 		tridentTopology = new TridentTopology();
-		tridentTopology.newStream("kafkaSpout", tridentKafkaSpout).shuffle()
-		
-		//tridentTopology.newStream("urlSpout", URLStreamSpoutTest.createFixedBatchSpout())
-		
+		tridentTopology.newStream("kafkaSpout", tridentKafkaSpout)
 		.each(new Fields(StringScheme.STRING_SCHEME_KEY), 
-				new LogRedisFunction(
-						(String) conf.get(RedisConstants.REDIS_HOST), 
-						Integer.parseInt((String) conf.get(RedisConstants.REDIS_PORT)), 
-						getOption("topic")),
+				new LogRedisFunction(),
 				new Fields(LogConstants.LOG_TEXT));
-		
-		//.each(new Fields(StringScheme.STRING_SCHEME_KEY), 
-		//.each(new Fields(LogConstants.LOG_TEXT),
-		//		new Split(),
-		//		new Fields("words"))
-		//.groupBy(new Fields("words"));
-		
 	}
 	
 	

@@ -3,16 +3,26 @@ package ca.dealsaccess.holt.jobs;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import storm.kafka.StringScheme;
+import storm.kafka.trident.TransactionalTridentKafkaSpout;
+import storm.trident.Stream;
 import storm.trident.TridentTopology;
+import storm.trident.operation.builtin.Count;
 
 import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import com.hmsonline.storm.cassandra.StormCassandraConstants;
 import com.hmsonline.storm.cassandra.bolt.AckStrategy;
+import com.hmsonline.storm.cassandra.bolt.CassandraBatchingBolt;
+import com.hmsonline.storm.cassandra.bolt.CassandraBolt;
 import com.hmsonline.storm.cassandra.bolt.CassandraCounterBatchingBolt;
+import com.hmsonline.storm.cassandra.bolt.mapper.DefaultTupleCounterMapper;
+import com.hmsonline.storm.cassandra.bolt.mapper.DefaultTupleMapper;
+import com.hmsonline.storm.cassandra.trident.CassandraStateFactory;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import backtype.storm.Config;
@@ -21,6 +31,7 @@ import backtype.storm.StormSubmitter;
 import backtype.storm.generated.AlreadyAliveException;
 import backtype.storm.generated.InvalidTopologyException;
 import backtype.storm.generated.StormTopology;
+import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
 import backtype.storm.utils.Utils;
@@ -31,12 +42,17 @@ import ca.dealsaccess.holt.common.RedisConstants;
 import ca.dealsaccess.holt.log.ApacheLogEntry;
 import ca.dealsaccess.holt.log.LogConstants;
 import ca.dealsaccess.holt.redis.RedisUtils;
+import ca.dealsaccess.holt.storm.spout.RedisFixedBatchSpout;
+import ca.dealsaccess.holt.storm.spout.RedisLPOPFixedBatchSpout;
 import ca.dealsaccess.holt.storm.bolt.IndexerBolt;
 import ca.dealsaccess.holt.storm.bolt.LogRulesBolt;
 import ca.dealsaccess.holt.storm.bolt.VolumeCountingBolt;
 import ca.dealsaccess.holt.storm.spout.RedisSpout;
 import ca.dealsaccess.holt.trident.function.IndexerFunction;
+import ca.dealsaccess.holt.trident.function.LogRedisFunction;
 import ca.dealsaccess.holt.trident.function.LogRulesFunction;
+import ca.dealsaccess.holt.trident.function.VolumeCountingFunction;
+import ca.dealsaccess.holt.trident.function.WriteToFileFunction;
 
 public final class LogStatsJob extends AbstractStormJob {
 
@@ -52,9 +68,13 @@ public final class LogStatsJob extends AbstractStormJob {
 	
 	private StormTopology topology;
 	
+	private TridentTopology tridentTopology;
+	
 	private Config conf = new Config();
 	
 	private LocalCluster cluster;
+	
+	private AstyanaxCnxn astyanaxCnxn;
 
 	public static void main(String[] args) {
 
@@ -132,53 +152,112 @@ public final class LogStatsJob extends AbstractStormJob {
 		// -i [LOG_TEXT: {String}] -o [LOG_ENTRY: {ApacheLogEntry}]
 		builder.setBolt("logRules", new LogRulesBolt(), 1).shuffleGrouping("redisSpout");
 
-		// -i [LOG_ENTRY: {ApacheLogEntry}] -o [LOG_ENTRY: {ApacheLogEntry},
-		// LOG_INDEX_ID: {String}]
+		// -i [LOG_ENTRY: {ApacheLogEntry}] -o [LOG_ENTRY: {ApacheLogEntry}, LOG_INDEX_ID: {String}]
 		builder.setBolt("indexerBolt", new IndexerBolt(), 1).shuffleGrouping("logRules");
 
-		// -i [LOG_ENTRY: {ApacheLogEntry}] -o [FIELD_ROW_KEY: {long},
-		// FIELD_COLUMN: {ApacheLogEntry}, FIELD_INCREMENT: {1L}]
+		// -i [LOG_ENTRY: {ApacheLogEntry}] -o [FIELD_ROW_KEY: {long}, FIELD_INCREMENT: {1L}, FIELD_COLUMN: {ApacheLogEntry}]
 		builder.setBolt("volumeCountBolt", new VolumeCountingBolt(), 1).shuffleGrouping("logRules");
 
-		builder.setBolt("cassandraCountBolt", buildCassandraBolt(), 1).shuffleGrouping("volumeCountBolt");
+		builder.setBolt("cassandraCountBolt", buildCassandraCounterBatchingBolt(), 1).shuffleGrouping("volumeCountBolt");
 	}
 	
 	private void buildTopology() throws ConfigException, ConnectionException {
 		createBuilder();
 		topology = builder.createTopology();
 	}
-
-	private void buildTridentTopology() {
-		TridentTopology tridentTopology = new TridentTopology();
-		tridentTopology.newStream(LogConstants.LOG_TEXT, new RedisSpout())
-		.each(new Fields(LogConstants.LOG_TEXT), new LogRulesFunction(), new Fields(LogConstants.LOG_ENTRY))
-		.each(new Fields(LogConstants.LOG_ENTRY), new IndexerFunction(), new Fields(LogConstants.LOG_INDEX_ID));
+	
+	private void createTridentTopology() throws ConfigException, ConnectionException {
+		RedisFixedBatchSpout redisTridentSpout = new RedisLPOPFixedBatchSpout(new Fields(LogConstants.LOG_TEXT), 5);
+		
+		tridentTopology = new TridentTopology();
+		// -o LOG_TEXT: {String}
+		Stream logRulesStream = tridentTopology.newStream("redisTridentSpout", redisTridentSpout)
+			// -i [LOG_TEXT: {String}] -o [LOG_ENTRY: {ApacheLogEntry}]
+			.each(new Fields(LogConstants.LOG_TEXT), new LogRulesFunction(), new Fields(LogConstants.LOG_ENTRY));
+		
+		// -i [LOG_ENTRY: {ApacheLogEntry}] -o [LOG_ENTRY_INDEXER: {ApacheLogEntry}, LOG_INDEX_ID: {String}]
+		logRulesStream.each(new Fields(LogConstants.LOG_ENTRY), new IndexerFunction(), new Fields(LogConstants.LOG_ENTRY_INDEXER, LogConstants.LOG_INDEX_ID));
+		
+		// -i [LOG_ENTRY: {ApacheLogEntry}] -o [FIELD_ROW_KEY: {long}, FIELD_INCREMENT: {1L}, FIELD_COLUMN: {ApacheLogEntry}]
+		Stream volumnCountingStream = logRulesStream.each(new Fields(LogConstants.LOG_ENTRY), 
+				new VolumeCountingFunction(), 
+				new Fields(VolumeCountingFunction.FIELD_ROW_KEY, VolumeCountingFunction.FIELD_INCREMENT, VolumeCountingFunction.FIELD_COLUMN))
+			//.groupBy(new Fields(VolumeCountingFunction.FIELD_ROW_KEY)).persistentAggregate(new CassandraStateFactory(inputPath), new Count(), new Fields("count"))
+			;
+		//for test
+		volumnCountingStream.each(new Fields(VolumeCountingFunction.FIELD_ROW_KEY, VolumeCountingFunction.FIELD_INCREMENT, VolumeCountingFunction.FIELD_COLUMN), 
+				new WriteToFileFunction("volumnCounting.out").setInputFields(VolumeCountingFunction.FIELD_ROW_KEY, VolumeCountingFunction.FIELD_INCREMENT, VolumeCountingFunction.FIELD_COLUMN),
+				new Fields("volumnCountingText"));
+		
+		//group FIELD_COLUMN
+		setupCassandra();
+		
+		
+		
+		//volumnCountingStream.groupBy(new Fields(VolumeCountingFunction.FIELD_ROW_KEY))
+		//	.persistentAggregate(new CassandraStateFactory(AstyanaxCnxn.CASSANDRA_CONFIG_KEY), new Count(), new Fields("count"));
+		
+		
 	}
 	
+
+	private void buildTridentTopology() throws ConfigException, ConnectionException {
+		createTridentTopology();
+		topology = tridentTopology.build();
+	}
 	
-	@SuppressWarnings("rawtypes")
-	private CassandraCounterBatchingBolt buildCassandraBolt() throws ConnectionException, ConfigException {
-		
-		AstyanaxCnxn astyanaxCnxn = new AstyanaxCnxn();
+	private void setupCassandra() throws ConfigException, ConnectionException {
+		astyanaxCnxn = new AstyanaxCnxn();
 		astyanaxCnxn.connect();
 		astyanaxCnxn.createKeyspaceIfNotExists();
 		astyanaxCnxn.createCFIfNotExists(AstyanaxCnxn.CASSANDRA_MINUTES_COUNT_CF_NAME);
 		
-		HashMap<String, Object> clientConfig = new HashMap<String, Object>();
-		clientConfig.put(StormCassandraConstants.CASSANDRA_HOST, "127.0.0.1:9160");
-		clientConfig.put(StormCassandraConstants.CASSANDRA_KEYSPACE, Arrays.asList(new String[] { astyanaxCnxn.getConfig().getKeySpace() }));
-		conf.put(AstyanaxCnxn.CASSANDRA_CONFIG_KEY, clientConfig);
+		setupCassandraConfig();
+	}
+	
+	private void setupCassandraConfig() {
 		
-
+		Map<String, Object> cassandraConfig = new HashMap<String, Object>();
+		cassandraConfig.put(StormCassandraConstants.CASSANDRA_HOST, "127.0.0.1:9160");
+		cassandraConfig.put(StormCassandraConstants.CASSANDRA_KEYSPACE, Arrays.asList(new String[] { astyanaxCnxn.getConfig().getKeySpace() }));
+		conf.put(AstyanaxCnxn.CASSANDRA_CONFIG_KEY, cassandraConfig);
+		
+	}
+	
+	
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private CassandraCounterBatchingBolt buildCassandraCounterBatchingBolt() throws ConnectionException, ConfigException {
+		
+		setupCassandra();
+		
 		CassandraCounterBatchingBolt logPersistenceBolt = new CassandraCounterBatchingBolt(
-				astyanaxCnxn.getConfig().getKeySpace(), AstyanaxCnxn.CASSANDRA_CONFIG_KEY,
-				AstyanaxCnxn.CASSANDRA_MINUTES_COUNT_CF_NAME, "rowKey",
-				"IncrementAmount");
+				AstyanaxCnxn.CASSANDRA_CONFIG_KEY,
+				new DefaultTupleCounterMapper(
+						astyanaxCnxn.getConfig().getKeySpace(), 
+						AstyanaxCnxn.CASSANDRA_MINUTES_COUNT_CF_NAME, 
+						VolumeCountingBolt.FIELD_ROW_KEY,
+						VolumeCountingBolt.FIELD_INCREMENT)
+				);
 		logPersistenceBolt.setAckStrategy(AckStrategy.ACK_ON_WRITE);
 		
 		return logPersistenceBolt;
 	}
 	
+	
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private CassandraBatchingBolt buildCassandraBatchingBolt() throws ConnectionException, ConfigException {
+		
+		setupCassandra();
+		
+		CassandraBatchingBolt cassandraBatchingBolt = new CassandraBatchingBolt(
+				AstyanaxCnxn.CASSANDRA_CONFIG_KEY, 
+				new DefaultTupleMapper(astyanaxCnxn.getConfig().getKeySpace(), 
+						AstyanaxCnxn.CASSANDRA_MINUTES_COUNT_CF_NAME, 
+						VolumeCountingBolt.FIELD_ROW_KEY));
+		cassandraBatchingBolt.setAckStrategy(AckStrategy.ACK_ON_WRITE);
+		
+		return cassandraBatchingBolt;
+	}
 	
 	
 	public void runLocal(int runTime) {

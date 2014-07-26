@@ -3,6 +3,8 @@ package ca.dealsaccess.holt.log;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.regex.Matcher;
 
 import org.apache.commons.io.FilenameUtils;
@@ -85,7 +87,14 @@ public class ApacheLogEntry extends AbstractLogEntry {
 
 	
 	
-	
+	public Long getMinuteForTime(long timeStamp) {
+		Calendar c = Calendar.getInstance();
+		Date d = new Date(timeStamp);
+		c.setTime(d);
+		c.set(Calendar.SECOND,0);
+		c.set(Calendar.MILLISECOND, 0);
+		return c.getTimeInMillis();
+	}
 	
 	
 	

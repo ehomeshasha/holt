@@ -2,10 +2,8 @@ package ca.dealsaccess.holt.storm.bolt;
 
 import java.util.Map;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.node.Node;
@@ -27,6 +25,8 @@ public class IndexerBolt extends BaseRichBolt {
 
 	private static final Logger LOG = LoggerFactory.getLogger(IndexerBolt.class);
 
+	private Node node;
+	
 	private Client client;
 
 	private OutputCollector collector;
@@ -40,7 +40,7 @@ public class IndexerBolt extends BaseRichBolt {
 	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
 		this.collector = collector;
-		Node node;
+		
 		if ((Boolean) stormConf.get(backtype.storm.Config.TOPOLOGY_DEBUG) == true) {
 			node = NodeBuilder.nodeBuilder().node();
 		} else {
@@ -52,6 +52,11 @@ public class IndexerBolt extends BaseRichBolt {
 		client = node.client();
 	}
 
+	@Override
+    public void cleanup() {
+		node.close();
+    } 
+	
 	@Override
 	public void execute(Tuple input) {
 		ApacheLogEntry entry = (ApacheLogEntry) input.getValueByField(LogConstants.LOG_ENTRY);

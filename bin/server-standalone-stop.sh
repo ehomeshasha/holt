@@ -12,6 +12,9 @@ echo zzy8945620 | sudo -u root -S service opscenterd stop
 set -x
 echo zzy8945620 | sudo -u root -S /etc/init.d/cassandra stop 
 
+#stop elasticsearch
+ps -ef | grep "elasticsearch" | grep -v grep | awk {'print $2'} | xargs kill -15
+
 #stop storm nimus, supervisor, ui
 ps -ef | grep "storm" | grep -v grep | awk {'print $2'} | xargs kill -15
 

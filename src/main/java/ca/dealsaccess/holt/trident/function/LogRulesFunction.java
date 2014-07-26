@@ -7,9 +7,9 @@ import storm.trident.operation.BaseFunction;
 import storm.trident.operation.TridentCollector;
 import storm.trident.tuple.TridentTuple;
 
+@SuppressWarnings("serial")
 public class LogRulesFunction extends BaseFunction {
-    private static final long serialVersionUID = 444491620425331677L;
-
+    
 	@Override
     public void execute(TridentTuple tuple, TridentCollector collector) {
 		

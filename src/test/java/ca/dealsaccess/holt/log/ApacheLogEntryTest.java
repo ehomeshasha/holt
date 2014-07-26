@@ -11,7 +11,8 @@ import com.google.gson.Gson;
 
 public class ApacheLogEntryTest {
 	
-	private static final String logText = "157.55.39.81 - - [14/Jul/2014:22:23:29 -0400] \"GET /index.php?home=deals&act=index&groupsite=Reitmans&cateid_1=98&cateid_2=100&price=$0-$10 HTTP/1.1\" 200 57460 \"-\" \"Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)\"";
+	//private static final String logText = "157.55.39.81 - - [14/Jul/2014:22:23:29 -0400] \"GET /index.php?home=deals&act=index&groupsite=Reitmans&cateid_1=98&cateid_2=100&price=$0-$10 HTTP/1.1\" 200 57460 \"-\" \"Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)\"";
+	private static final String logText = "175.42.85.236 - - [14/Jul/2014:22:23:43 -0400] \"GET /index.php?home=index&act=jump&id=2_325400/index.php HTTP/1.1\" 302 1 \"-\" \"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1;)\"";
 	
 	@Test
 	public void parseDateTest() {

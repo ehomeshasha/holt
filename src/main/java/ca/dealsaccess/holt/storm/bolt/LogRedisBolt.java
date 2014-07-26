@@ -35,8 +35,13 @@ public class LogRedisBolt extends BaseRichBolt {
         port = Integer.valueOf(conf.get(RedisConstants.REDIS_PORT).toString());
         key = conf.get(RedisConstants.REDIS_KEY).toString();
 		jedis = new Jedis(host, port);
-
+		jedis.connect();
 	}
+	
+	@Override
+    public void cleanup() {
+		jedis.disconnect();
+    } 
 
 	@Override
 	public void execute(Tuple input) {

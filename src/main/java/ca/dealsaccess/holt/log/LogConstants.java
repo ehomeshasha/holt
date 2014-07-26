@@ -12,4 +12,8 @@ public class LogConstants {
     
     public static final String LOG_COUNT = "Count";
 
+	public static final String LOG_ENTRY_INDEXER = "LogEntryIndexer";
+
+	
+
 }

@@ -14,6 +14,7 @@ import com.netflix.astyanax.ddl.ColumnFamilyDefinition;
 import com.netflix.astyanax.ddl.KeyspaceDefinition;
 import com.netflix.astyanax.impl.AstyanaxConfigurationImpl;
 import com.netflix.astyanax.model.ColumnFamily;
+import com.netflix.astyanax.serializers.LongSerializer;
 import com.netflix.astyanax.serializers.StringSerializer;
 import com.netflix.astyanax.thrift.ThriftFamilyFactory;
 
@@ -25,7 +26,7 @@ public class AstyanaxCnxn {
 	
 	private Keyspace keyspace;
 	
-	public static final String CASSANDRA_CONFIG_KEY = "cassandra.logging.config";
+	public static final String CASSANDRA_CONFIG_KEY = "cassandra.config";
 	
 	public static final String CASSANDRA_MINUTES_COUNT_CF_NAME = "loggingCF";
 	

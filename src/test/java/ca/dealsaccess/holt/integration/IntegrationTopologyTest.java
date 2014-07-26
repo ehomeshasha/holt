@@ -124,7 +124,7 @@ public class IntegrationTopologyTest {
 		jedis.rpush(testRedisKey, testData);
 		ApacheLogEntry entry = new ApacheLogEntry(testData);
 		entry.parseLogText();
-		long minute = VolumeCountingBolt.getMinuteForTime(entry.getTimeStamp());
+		long minute = entry.getMinuteForTime(entry.getTimeStamp());
 		Utils.sleep(6000);
 		
 		// Check that the indexing working

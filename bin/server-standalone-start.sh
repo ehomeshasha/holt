@@ -37,6 +37,9 @@ nohup storm supervisor &
 #start storm ui
 nohup storm ui &
 
+#start elasticsearch
+/home/hadoop-user/scout_workspace/elasticsearch-0.20.1/bin/elasticsearch
+
 #start cassandra
 echo zzy8945620 | sudo -u root -S /etc/init.d/cassandra start
 
