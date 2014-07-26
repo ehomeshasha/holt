@@ -41,7 +41,7 @@ import com.netflix.astyanax.model.Rows;
 import com.netflix.astyanax.serializers.StringSerializer;
 import com.netflix.astyanax.thrift.ThriftFamilyFactory;
 import com.netflix.astyanax.util.RangeBuilder;
-import com.netflix.astyanax.serializers.LongSerializer;
+
 
 
 public class CassandraDataTest {
@@ -52,9 +52,12 @@ public class CassandraDataTest {
 	
 	private Keyspace keyspace;
 	
-	private ColumnFamily<String, String> CF_STANDARD1;
+	private ColumnFamily<String, String> CF_COUNTER1;
 	
-	private ColumnFamily<Long, String> CF_COUNTER1;
+	private Map<String, Object> CF_COUNTER1_OPTIONS = ImmutableMap.<String, Object>builder()
+	        .put("default_validation_class", "CounterColumnType")
+	        .put("replicate_on_write", true)
+	        .build(); 
 	
 	@Before
 	public void setup() throws ConfigException, ConnectionException {
@@ -86,23 +89,11 @@ public class CassandraDataTest {
 		keyspace = context.getClient();
 		
 		
-		CF_STANDARD1 = ColumnFamily
-				.newColumnFamily(LogConstants.CASSANDRA_MINUTES_COUNT_CF_NAME, StringSerializer.get(), StringSerializer.get());
+		CF_COUNTER1 = ColumnFamily
+				.newColumnFamily(LogConstants.CASSANDRA_MINUTE_COUNT_CF_NAME, StringSerializer.get(), StringSerializer.get());
 		
 		
-		CF_COUNTER1 =
-			    new ColumnFamily<Long, String>(
-			        "CounterColumnFamily",
-			        LongSerializer.get(),
-			        StringSerializer.get());
 		
-		createCFIfNotExists(CF_STANDARD1);
-		
-		
-		Map<String, Object> CF_COUNTER1_OPTIONS = ImmutableMap.<String, Object>builder()
-		        .put("default_validation_class", "CounterColumnType")
-		        .put("replicate_on_write", true)
-		        .build(); 
 		createCFIfNotExists(CF_COUNTER1, CF_COUNTER1_OPTIONS);
 		
 		
@@ -158,7 +149,7 @@ public class CassandraDataTest {
                 mutation = keyspace.prepareMutationBatch();
                 mutations.put(ks, mutation);
             }
-            Long rowKey = Long.valueOf(input[0]);
+            String rowKey = input[0];
             long incrementAmount = Long.parseLong(input[1]);
             //K rowKey = tupleMapper.mapToRowKey(input);
             //long incrementAmount = tupleMapper.mapToIncrementAmount(input);
@@ -186,7 +177,7 @@ public class CassandraDataTest {
 		m.withRow(CF_COUNTER1, 1386520005L).incrementCounterColumn("arr1", 1);
 		m.execute();
 		*/
-		keyspace.prepareColumnMutation(CF_COUNTER1, 1386520005L, "CounterColumn1")
+		keyspace.prepareColumnMutation(CF_COUNTER1, "1386520005", "CounterColumn1")
 	    .incrementCounterColumn(1)
 	    .execute();
 		
@@ -200,7 +191,7 @@ public class CassandraDataTest {
 
 		String rowKey = "1386520005";
 
-		m.withRow(CF_STANDARD1, rowKey)
+		m.withRow(CF_COUNTER1, rowKey)
 		    .putColumn("arr1", 1);
 
 		try {
@@ -230,14 +221,14 @@ public class CassandraDataTest {
 	
 	@Test
 	public void dropCF() throws ConnectionException {
-		System.out.println("drop columnFamily "+LogConstants.CASSANDRA_MINUTES_COUNT_CF_NAME+".");
-		keyspace.dropColumnFamily(CF_STANDARD1);
+		System.out.println("drop columnFamily "+LogConstants.CASSANDRA_MINUTE_COUNT_CF_NAME+".");
+		keyspace.dropColumnFamily("LoggingMinuteCounterSuper");
 	}
 	
 	@Test
 	public void createCF() throws ConnectionException {
-		System.out.println("create columnFamily "+LogConstants.CASSANDRA_MINUTES_COUNT_CF_NAME+".");
-		keyspace.createColumnFamily(CF_STANDARD1, null);
+		System.out.println("create columnFamily "+LogConstants.CASSANDRA_MINUTE_COUNT_CF_NAME+".");
+		keyspace.createColumnFamily(CF_COUNTER1, CF_COUNTER1_OPTIONS);
 	}
 	
 	@Test
@@ -264,7 +255,7 @@ public class CassandraDataTest {
         while (rowKeys.hasNext()) {
 
             String rowKey = rowKeys.next();
-            currentBatch.withRow(CF_STANDARD1, rowKey).delete();
+            currentBatch.withRow(CF_COUNTER1, rowKey).delete();
             currentBatchSize++;
             
             if (!rowKeys.hasNext() || (currentBatchSize > batchSize)) {
@@ -294,7 +285,7 @@ public class CassandraDataTest {
     private Rows<String, String> getRows() {
 		Rows<String, String> rows = null;
 		try {
-		    rows = keyspace.prepareQuery(CF_STANDARD1)
+		    rows = keyspace.prepareQuery(CF_COUNTER1)
 		        .getAllRows()
 		        .setRowLimit(10)
 		        .withColumnRange(new RangeBuilder().setLimit(10).build())
@@ -318,7 +309,7 @@ public class CassandraDataTest {
 	private List<String> getRowKeysList() throws ConnectionException {
 	
 		OperationResult<Rows<String, String>> result =
-			keyspace.prepareQuery(CF_STANDARD1)
+			keyspace.prepareQuery(CF_COUNTER1)
 			  .getAllRows()
 			  .withColumnRange(new RangeBuilder().setLimit(0).build())  // RangeBuilder will be available in version 1.13
 			  .execute();

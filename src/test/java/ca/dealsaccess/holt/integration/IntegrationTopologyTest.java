@@ -73,7 +73,7 @@ public class IntegrationTopologyTest {
 		
 		CF_USER_INFO =
 				  new ColumnFamily<String, String>(
-					LogConstants.CASSANDRA_MINUTES_COUNT_CF_NAME,      // Column Family Name
+					LogConstants.CASSANDRA_MINUTE_COUNT_CF_NAME,      // Column Family Name
 				    StringSerializer.get(),   // Key Serializer
 				    StringSerializer.get());
 		
@@ -124,7 +124,7 @@ public class IntegrationTopologyTest {
 		jedis.rpush(testRedisKey, testData);
 		ApacheLogEntry entry = new ApacheLogEntry(testData);
 		entry.parseLogText();
-		long minute = entry.getMinuteForTime(entry.getTimeStamp());
+		long minute = entry.getMinuteForTime();
 		Utils.sleep(6000);
 		
 		// Check that the indexing working

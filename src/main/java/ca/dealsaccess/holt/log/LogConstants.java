@@ -14,9 +14,17 @@ public class LogConstants {
 
 	public static final String LOG_ENTRY_INDEXER = "LogEntryIndexer";
 	
-	public static final String CASSANDRA_MINUTES_COUNT_CF_NAME = "logging.perminutes.count";
+	public static final String CASSANDRA_MINUTE_COUNT_CF_NAME = "LoggingMinuteCounter";
 	
+	public static final String CASSANDRA_HOUR_COUNT_CF_NAME = "LoggingHourCounter";
+	
+	public static final String CASSANDRA_DAY_COUNT_CF_NAME = "LoggingDayCounter";
+	
+	public static final String CASSANDRA_WEEK_COUNT_CF_NAME = "LoggingWeekCounter";
+	
+	public static final String CASSANDRA_YEAR_COUNT_CF_NAME = "LoggingYearCounter";
 
+	public static final String CASSANDRA_MINUTE_COUNT_SUPER_CF_NAME = "LoggingMinuteCounterSuper";
 	
 
 }

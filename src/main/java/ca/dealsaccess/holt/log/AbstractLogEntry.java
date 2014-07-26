@@ -1,32 +1,39 @@
 package ca.dealsaccess.holt.log;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.regex.Pattern;
 
 
 public abstract class AbstractLogEntry {
 	
-	protected String logText;
+	protected String EMPTY = "";
 	
-	protected String ip;
+	protected String logText = EMPTY;
 	
-	protected long timestamp;
+	protected String ip = EMPTY;
+	
+	protected long timestamp = 0L;
 	
 	protected Date date;
 	
-	protected String timezone;
+	protected String timezone = EMPTY;
 	
-	protected String url;
+	protected String url = EMPTY;
 	
-	protected String method;
+	protected String method = EMPTY;
 	
-	protected String protocol;
+	protected String protocol = EMPTY;
 	
-	protected String extension;
+	protected String extension = EMPTY;
 	
-	protected int statusCode;
+	protected int statusCode = 0;
 	
-	protected int responseSize;
+	protected int responseSize = 0;
+	
+	protected String country = EMPTY;
+	
+	protected String city = EMPTY;
 	
 	protected static final Pattern whiteSpace = Pattern.compile("\\s+");
 	
@@ -43,8 +50,71 @@ public abstract class AbstractLogEntry {
 	public AbstractLogEntry() {
 		
 	}
-
+	
 	public abstract void parseLogText();
+	
+	private Calendar calendar = Calendar.getInstance();
+	
+	private Calendar getMinuteCalendar() {
+		calendar.setTime(date);
+		calendar.set(Calendar.SECOND,0);
+		calendar.set(Calendar.MILLISECOND, 0);
+		return calendar;
+	}
+	
+	private Calendar getHourCalendar() {
+		getMinuteCalendar().set(Calendar.MINUTE, 0);
+		return calendar;
+	}
+	
+	private Calendar getDayCalendar() {
+		getHourCalendar().set(Calendar.HOUR, 0);
+		return calendar;
+	}
+	
+	private Calendar getWeekCalendar() {
+		getDayCalendar().set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+		return calendar;
+	}
+	
+	
+	private Calendar getMonthCalendar() {
+		getDayCalendar().set(Calendar.DAY_OF_MONTH, 1);
+		return calendar;
+	}
+	
+	private Calendar getYearCalendar() {
+		getDayCalendar().set(Calendar.DAY_OF_YEAR, 1);
+		return calendar;
+	}
+	
+	public Long getMinuteForTime() {
+		getMinuteCalendar();
+		return calendar.getTimeInMillis();
+	}
+
+	public Long getHourForTime() {
+		return getHourCalendar().getTimeInMillis();
+	}
+	
+	public Long getDayForTime() {
+		return getDayCalendar().getTimeInMillis();
+	}
+	
+	public Long getWeekForTime() {
+		return getWeekCalendar().getTimeInMillis();
+	}
+	
+	public Long getMonthForTime() {
+		return getMonthCalendar().getTimeInMillis();
+	}
+	
+	public Long getYearForTime() {
+		return getYearCalendar().getTimeInMillis();
+	}
+	
+	
+	
 	
 	protected class LogEntryException extends Exception {
 
@@ -110,5 +180,15 @@ public abstract class AbstractLogEntry {
 	public int getResponseSize() {
 		return responseSize;
 	}
+
+	public String getCountry() {
+		return country;
+	}
+
+	public String getCity() {
+		return city;
+	}
+
+	
 
 }

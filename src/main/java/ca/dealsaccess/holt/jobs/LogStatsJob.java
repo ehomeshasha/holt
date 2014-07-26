@@ -14,13 +14,11 @@ import storm.trident.TridentTopology;
 import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import com.hmsonline.storm.cassandra.StormCassandraConstants;
 import com.hmsonline.storm.cassandra.bolt.AckStrategy;
-import com.hmsonline.storm.cassandra.bolt.CassandraBatchingBolt;
 import com.hmsonline.storm.cassandra.bolt.CassandraCounterBatchingBolt;
 import com.hmsonline.storm.cassandra.bolt.mapper.DefaultTupleCounterMapper;
-import com.hmsonline.storm.cassandra.bolt.mapper.DefaultTupleMapper;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.ColumnFamily;
-import com.netflix.astyanax.serializers.LongSerializer;
+
 import com.netflix.astyanax.serializers.StringSerializer;
 
 import backtype.storm.Config;
@@ -33,16 +31,20 @@ import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
 import backtype.storm.utils.Utils;
 import ca.dealsaccess.holt.astyanax.AstyanaxCnxn;
+import ca.dealsaccess.holt.astyanax.LogStatsColumnFamily;
+
 import ca.dealsaccess.holt.common.AbstractConfig.ConfigException;
 import ca.dealsaccess.holt.common.AbstractStormJob;
 import ca.dealsaccess.holt.common.RedisConstants;
 import ca.dealsaccess.holt.log.ApacheLogEntry;
 import ca.dealsaccess.holt.log.LogConstants;
+
 import ca.dealsaccess.holt.redis.RedisUtils;
 import ca.dealsaccess.holt.storm.spout.RedisFixedBatchSpout;
 import ca.dealsaccess.holt.storm.spout.RedisLPOPFixedBatchSpout;
 import ca.dealsaccess.holt.storm.bolt.IndexerBolt;
 import ca.dealsaccess.holt.storm.bolt.LogRulesBolt;
+import ca.dealsaccess.holt.storm.bolt.LogStatsMinuteBolt;
 import ca.dealsaccess.holt.storm.bolt.VolumeCountingBolt;
 import ca.dealsaccess.holt.storm.spout.RedisSpout;
 import ca.dealsaccess.holt.trident.function.IndexerFunction;
@@ -153,10 +155,15 @@ public final class LogStatsJob extends AbstractStormJob {
 		// -i [LOG_ENTRY: {ApacheLogEntry}] -o [LOG_ENTRY: {ApacheLogEntry}, LOG_INDEX_ID: {String}]
 		builder.setBolt("indexerBolt", new IndexerBolt(), 1).shuffleGrouping("logRules");
 
-		// -i [LOG_ENTRY: {ApacheLogEntry}] -o [FIELD_ROW_KEY: {long}, FIELD_INCREMENT: {1L}, FIELD_COLUMN: {ApacheLogEntry}]
-		builder.setBolt("volumeCountBolt", new VolumeCountingBolt(), 1).shuffleGrouping("logRules");
+		builder.setBolt("LogStatsMinuteBolt", new LogStatsMinuteBolt(), 1).shuffleGrouping("logRules");
+		
+		
+		setupCassandra();
+		
+		
+		
 
-		builder.setBolt("cassandraCountBolt", buildCassandraCounterBatchingBolt(), 1).shuffleGrouping("volumeCountBolt");
+		builder.setBolt("cassandraMinuteBolt", buildCassandraMinuteBolt(), 1).shuffleGrouping("LogStatsMinuteBolt");
 	}
 	
 	private void buildTopology() throws ConfigException, ConnectionException {
@@ -188,7 +195,7 @@ public final class LogStatsJob extends AbstractStormJob {
 				new Fields("volumnCountingText"));
 		
 		//group FIELD_COLUMN
-		setupCassandra();
+		//setupCassandra();
 		
 		
 		
@@ -209,11 +216,16 @@ public final class LogStatsJob extends AbstractStormJob {
 		astyanaxCnxn.connect();
 		astyanaxCnxn.createKeyspaceIfNotExists();
 		
+		LogStatsColumnFamily logStatsCF = new LogStatsColumnFamily(astyanaxCnxn);
+		logStatsCF.createAllCounterCFIfNotExist();
+		//LogStatsOptions logStatsOptions = new LogStatsOptions(duration);
+		//Map<String, Object> options = logStatsOptions.getCFOptions();
+		
+		ColumnFamily<String, String> CF_MINUTE_COUNTER_SUPER = new ColumnFamily<String, String>(
+	            "LoggingMinuteCounterSuper", StringSerializer.get(), StringSerializer.get());
 		
 		
-		astyanaxCnxn.createCounterCFIfNotExists(
-				ColumnFamily.newColumnFamily(LogConstants.CASSANDRA_MINUTES_COUNT_CF_NAME, LongSerializer.get(), StringSerializer.get())
-				);
+		astyanaxCnxn.createCounterCFIfNotExists(CF_MINUTE_COUNTER_SUPER);
 		
 		setupCassandraConfig();
 	}
@@ -229,7 +241,7 @@ public final class LogStatsJob extends AbstractStormJob {
 	
 	
 	@SuppressWarnings({"rawtypes", "unchecked"})
-	private CassandraCounterBatchingBolt buildCassandraCounterBatchingBolt() throws ConnectionException, ConfigException {
+	private CassandraCounterBatchingBolt buildCassandraMinuteBolt() throws ConnectionException, ConfigException {
 		
 		setupCassandra();
 		
@@ -237,7 +249,7 @@ public final class LogStatsJob extends AbstractStormJob {
 				AstyanaxCnxn.CASSANDRA_CONFIG_KEY,
 				new DefaultTupleCounterMapper(
 						astyanaxCnxn.getConfig().getKeySpace(), 
-						LogConstants.CASSANDRA_MINUTES_COUNT_CF_NAME, 
+						LogConstants.CASSANDRA_MINUTE_COUNT_SUPER_CF_NAME, 
 						VolumeCountingBolt.FIELD_ROW_KEY,
 						VolumeCountingBolt.FIELD_INCREMENT)
 				);
@@ -246,7 +258,7 @@ public final class LogStatsJob extends AbstractStormJob {
 		return logPersistenceBolt;
 	}
 	
-	
+	/*
 	@SuppressWarnings({"rawtypes", "unchecked", "unused"})
 	private CassandraBatchingBolt buildCassandraBatchingBolt() throws ConnectionException, ConfigException {
 		
@@ -261,7 +273,7 @@ public final class LogStatsJob extends AbstractStormJob {
 		
 		return cassandraBatchingBolt;
 	}
-	
+	*/
 	
 	public void runLocal(int runTime) {
 		

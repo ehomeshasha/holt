@@ -21,7 +21,7 @@ public class VolumeCountingFunction extends BaseFunction {
     public void execute(TridentTuple tuple, TridentCollector collector) {
 		ApacheLogEntry entry = (ApacheLogEntry) tuple.getValueByField(LogConstants.LOG_ENTRY);
 		collector.emit(new Values(
-				entry.getMinuteForTime(entry.getTimeStamp()), 
+				entry.getMinuteForTime(), 
 				1L,
 				entry.getUrl()
 		));

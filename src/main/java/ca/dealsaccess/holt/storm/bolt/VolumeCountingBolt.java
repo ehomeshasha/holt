@@ -27,7 +27,13 @@ public class VolumeCountingBolt extends BaseRichBolt {
 	
 	public static final String FIELD_INCREMENT = "IncrementAmount";
 	
-	public static final String FIELD_COLUMN = "IncrementColumn";
+	public static final String FIELD_COLUMN_ALL = "all";
+	
+	public static final String FIELD_COLUMN_URL = "url";
+	
+	public static final String FIELD_COLUMN_EXT = "extension";
+	
+	public static final String FIELD_COLUMN_IP = "ip";
 	
 	@SuppressWarnings("rawtypes")
 	@Override
@@ -42,16 +48,25 @@ public class VolumeCountingBolt extends BaseRichBolt {
 	public void execute(Tuple input) {
 		ApacheLogEntry entry = (ApacheLogEntry) input.getValueByField(LogConstants.LOG_ENTRY);
 		collector.emit(new Values(
-				entry.getMinuteForTime(entry.getTimeStamp()), 
+				entry.getMinuteForTime(), 
 				1L,
-				0L
+				"all",
+				entry.getUrl(),
+				entry.getExtension(),
+				entry.getIp()
 		));
 		collector.ack(input);
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields(FIELD_ROW_KEY, FIELD_INCREMENT, FIELD_COLUMN));
+		declarer.declare(new Fields(
+				FIELD_ROW_KEY, 
+				FIELD_INCREMENT, 
+				FIELD_COLUMN_ALL, 
+				FIELD_COLUMN_URL, 
+				FIELD_COLUMN_EXT, 
+				FIELD_COLUMN_IP));
 		//declarer.declare(new Fields(FIELD_ROW_KEY, FIELD_INCREMENT));
 	}
 

@@ -3,18 +3,23 @@ package ca.dealsaccess.holt.log;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.regex.Matcher;
 
 import org.apache.commons.io.FilenameUtils;
+import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import ca.dealsaccess.holt.log.ip.HttpIPResolver;
 
 //example: 157.55.39.81 - - [14/Jul/2014:22:23:29 -0400] "GET /index.php?home=deals&act=index&groupsite=Reitmans&cateid_1=98&cateid_2=100&price=$0-$10 HTTP/1.1" 200 57460 "-" "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)"
 public class ApacheLogEntry extends AbstractLogEntry {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(ApacheLogEntry.class);
+	
+	private static final String CONTRY_KEY = "country_name";
+	
+	private static final String CITY_KEY = "city";
 	
 	public ApacheLogEntry() {
 		
@@ -44,12 +49,20 @@ public class ApacheLogEntry extends AbstractLogEntry {
 		String[] tmpArr = whiteSpace.split(tmpStr.replace("-", ""));
 		if(tmpArr.length >= 3) {
 			ip = tmpArr[0];
+			findLocationbyIP();
 			statusCode = Integer.parseInt(tmpArr[1]);
 			responseSize = Integer.parseInt(tmpArr[2]);
 		} else {
 			throw new LogEntryException(this.getClass().getName()+": parse IP/statusCode/responseSize failed for apache log");
 		}
 		
+	}
+
+	private void findLocationbyIP() {
+		//find country city from url
+		JSONObject json = HttpIPResolver.resolveIP(ip);
+		country = (String) json.get(CONTRY_KEY);
+		city = (String) json.get(CITY_KEY);
 	}
 
 	//example: GET /index.php?home=deals&act=index&groupsite=Reitmans&cateid_1=98&cateid_2=100&price=$0-$10 HTTP/1.1
@@ -85,19 +98,6 @@ public class ApacheLogEntry extends AbstractLogEntry {
 		}
 	}
 
-	
-	
-	public Long getMinuteForTime(long timeStamp) {
-		Calendar c = Calendar.getInstance();
-		Date d = new Date(timeStamp);
-		c.setTime(d);
-		c.set(Calendar.SECOND,0);
-		c.set(Calendar.MILLISECOND, 0);
-		return c.getTimeInMillis();
-	}
-	
-	
-	
 	
 	
 	

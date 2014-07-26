@@ -19,8 +19,9 @@ public class LogRulesBolt extends BaseRichBolt {
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
+	public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
 		this.collector = collector;
+		
 	}
 
 	@Override
