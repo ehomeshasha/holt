@@ -122,24 +122,10 @@
 
 	<dependencies>
 
-
-		<dependency>
-			<groupId>storm.kafka</groupId>
-			<artifactId>storm-kafka-plus</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.elasticsearch</groupId>
-			<artifactId>elasticsearch</artifactId>
-			<version>0.20.1</version>
-		</dependency>
-
-
 		<dependency>
 			<groupId>com.hmsonline</groupId>
 			<artifactId>storm-cassandra</artifactId>
-			<version>0.4.0-rc5-SNAPSHOT</version>
+			<version>0.4.0-rc5-test-SNAPSHOT</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>slf4j-log4j12</artifactId>
@@ -155,6 +141,20 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		<dependency>
+			<groupId>storm.kafka</groupId>
+			<artifactId>storm-kafka-plus</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.elasticsearch</groupId>
+			<artifactId>elasticsearch</artifactId>
+			<version>0.20.1</version>
+		</dependency>
+
+
+		
 
 
 		<dependency>

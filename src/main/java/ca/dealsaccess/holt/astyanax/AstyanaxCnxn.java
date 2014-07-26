@@ -1,5 +1,7 @@
 package ca.dealsaccess.holt.astyanax;
 
+import java.util.Map;
+
 import ca.dealsaccess.holt.common.AbstractConfig.ConfigException;
 import ca.dealsaccess.holt.common.CassandraConfig;
 
@@ -14,7 +16,6 @@ import com.netflix.astyanax.ddl.ColumnFamilyDefinition;
 import com.netflix.astyanax.ddl.KeyspaceDefinition;
 import com.netflix.astyanax.impl.AstyanaxConfigurationImpl;
 import com.netflix.astyanax.model.ColumnFamily;
-import com.netflix.astyanax.serializers.LongSerializer;
 import com.netflix.astyanax.serializers.StringSerializer;
 import com.netflix.astyanax.thrift.ThriftFamilyFactory;
 
@@ -28,7 +29,12 @@ public class AstyanaxCnxn {
 	
 	public static final String CASSANDRA_CONFIG_KEY = "cassandra.config";
 	
-	public static final String CASSANDRA_MINUTES_COUNT_CF_NAME = "loggingCF";
+	
+	
+	private Map<String, Object> CF_COUNTER1_OPTIONS = ImmutableMap.<String, Object>builder()
+	        .put("default_validation_class", "CounterColumnType")
+	        .put("replicate_on_write", true)
+	        .build(); 
 	
 	public AstyanaxCnxn() throws ConfigException {
 		config = new CassandraConfig(true);
@@ -62,14 +68,16 @@ public class AstyanaxCnxn {
 	public void createKeyspaceIfNotExists() throws ConnectionException {
 		// Using simple strategy
 		
-		keyspace.createKeyspaceIfNotExists(ImmutableMap.<String, Object>builder()
-		    .put("strategy_options", ImmutableMap.<String, Object>builder()
-		        .put("replication_factor", "1")
-		        .build())
-		    .put("strategy_class",     "SimpleStrategy")
-		        .build()
-		     );
-
+		KeyspaceDefinition ksDef = keyspace.describeKeyspace();
+		if(ksDef == null) {
+			keyspace.createKeyspace(ImmutableMap.<String, Object>builder()
+			    .put("strategy_options", ImmutableMap.<String, Object>builder()
+			        .put("replication_factor", "1")
+			        .build())
+			    .put("strategy_class",     "SimpleStrategy")
+			        .build()
+			     );
+		}
 		
 	}
 
@@ -85,14 +93,47 @@ public class AstyanaxCnxn {
 		return keyspace;
 	}
 
-	public void createCFIfNotExists(String cassandraMinutesCountCfName) throws ConnectionException {
+	public void createCFIfNotExists(String CFName) throws ConnectionException {
+		createCFIfNotExists(CFName, null);
+	}
+	
+	public void createCFIfNotExists(ColumnFamily<?, ?> CF) throws ConnectionException {
+		createCFIfNotExists(CF, null);
+	}
+	
+	
+	public void createCFIfNotExists(String CFName, Map<String, Object> CF_Options) throws ConnectionException {
 		
 		KeyspaceDefinition ksDef = keyspace.describeKeyspace();
-        ColumnFamilyDefinition cfDef = ksDef.getColumnFamily(cassandraMinutesCountCfName);
+        ColumnFamilyDefinition cfDef = ksDef.getColumnFamily(CFName);
         if (cfDef == null) {
         	ColumnFamily<String, String> CF_STANDARD1 = ColumnFamily
-    				.newColumnFamily(cassandraMinutesCountCfName, StringSerializer.get(), StringSerializer.get());
-        	keyspace.createColumnFamily(CF_STANDARD1, null);
+    				.newColumnFamily(CFName, StringSerializer.get(), StringSerializer.get());
+        	keyspace.createColumnFamily(CF_STANDARD1, CF_Options);
         }
 	}
+	
+	
+	public void createCFIfNotExists(ColumnFamily<?, ?> CF, Map<String, Object> CF_Options) throws ConnectionException {
+		
+		KeyspaceDefinition ksDef = keyspace.describeKeyspace();
+        ColumnFamilyDefinition cfDef = ksDef.getColumnFamily(CF.getName());
+        if (cfDef == null) {
+        	keyspace.createColumnFamily(CF, CF_Options);
+        }
+        
+	}
+	
+	public void createCounterCFIfNotExists(String CFName) throws ConnectionException {
+		createCFIfNotExists(CFName, CF_COUNTER1_OPTIONS);
+	}
+	
+	public void createCounterCFIfNotExists(ColumnFamily<?, ?> CF) throws ConnectionException {
+		createCFIfNotExists(CF, CF_COUNTER1_OPTIONS);
+        
+	}
+	
+	
+	
+	
 }

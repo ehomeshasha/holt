@@ -8,22 +8,20 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import storm.kafka.StringScheme;
-import storm.kafka.trident.TransactionalTridentKafkaSpout;
 import storm.trident.Stream;
 import storm.trident.TridentTopology;
-import storm.trident.operation.builtin.Count;
 
 import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import com.hmsonline.storm.cassandra.StormCassandraConstants;
 import com.hmsonline.storm.cassandra.bolt.AckStrategy;
 import com.hmsonline.storm.cassandra.bolt.CassandraBatchingBolt;
-import com.hmsonline.storm.cassandra.bolt.CassandraBolt;
 import com.hmsonline.storm.cassandra.bolt.CassandraCounterBatchingBolt;
 import com.hmsonline.storm.cassandra.bolt.mapper.DefaultTupleCounterMapper;
 import com.hmsonline.storm.cassandra.bolt.mapper.DefaultTupleMapper;
-import com.hmsonline.storm.cassandra.trident.CassandraStateFactory;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import com.netflix.astyanax.model.ColumnFamily;
+import com.netflix.astyanax.serializers.LongSerializer;
+import com.netflix.astyanax.serializers.StringSerializer;
 
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
@@ -31,7 +29,6 @@ import backtype.storm.StormSubmitter;
 import backtype.storm.generated.AlreadyAliveException;
 import backtype.storm.generated.InvalidTopologyException;
 import backtype.storm.generated.StormTopology;
-import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
 import backtype.storm.utils.Utils;
@@ -49,7 +46,6 @@ import ca.dealsaccess.holt.storm.bolt.LogRulesBolt;
 import ca.dealsaccess.holt.storm.bolt.VolumeCountingBolt;
 import ca.dealsaccess.holt.storm.spout.RedisSpout;
 import ca.dealsaccess.holt.trident.function.IndexerFunction;
-import ca.dealsaccess.holt.trident.function.LogRedisFunction;
 import ca.dealsaccess.holt.trident.function.LogRulesFunction;
 import ca.dealsaccess.holt.trident.function.VolumeCountingFunction;
 import ca.dealsaccess.holt.trident.function.WriteToFileFunction;
@@ -75,6 +71,8 @@ public final class LogStatsJob extends AbstractStormJob {
 	private LocalCluster cluster;
 	
 	private AstyanaxCnxn astyanaxCnxn;
+	
+	
 
 	public static void main(String[] args) {
 
@@ -210,7 +208,12 @@ public final class LogStatsJob extends AbstractStormJob {
 		astyanaxCnxn = new AstyanaxCnxn();
 		astyanaxCnxn.connect();
 		astyanaxCnxn.createKeyspaceIfNotExists();
-		astyanaxCnxn.createCFIfNotExists(AstyanaxCnxn.CASSANDRA_MINUTES_COUNT_CF_NAME);
+		
+		
+		
+		astyanaxCnxn.createCounterCFIfNotExists(
+				ColumnFamily.newColumnFamily(LogConstants.CASSANDRA_MINUTES_COUNT_CF_NAME, LongSerializer.get(), StringSerializer.get())
+				);
 		
 		setupCassandraConfig();
 	}
@@ -234,7 +237,7 @@ public final class LogStatsJob extends AbstractStormJob {
 				AstyanaxCnxn.CASSANDRA_CONFIG_KEY,
 				new DefaultTupleCounterMapper(
 						astyanaxCnxn.getConfig().getKeySpace(), 
-						AstyanaxCnxn.CASSANDRA_MINUTES_COUNT_CF_NAME, 
+						LogConstants.CASSANDRA_MINUTES_COUNT_CF_NAME, 
 						VolumeCountingBolt.FIELD_ROW_KEY,
 						VolumeCountingBolt.FIELD_INCREMENT)
 				);
@@ -244,7 +247,7 @@ public final class LogStatsJob extends AbstractStormJob {
 	}
 	
 	
-	@SuppressWarnings({"rawtypes", "unchecked"})
+	@SuppressWarnings({"rawtypes", "unchecked", "unused"})
 	private CassandraBatchingBolt buildCassandraBatchingBolt() throws ConnectionException, ConfigException {
 		
 		setupCassandra();
@@ -252,7 +255,7 @@ public final class LogStatsJob extends AbstractStormJob {
 		CassandraBatchingBolt cassandraBatchingBolt = new CassandraBatchingBolt(
 				AstyanaxCnxn.CASSANDRA_CONFIG_KEY, 
 				new DefaultTupleMapper(astyanaxCnxn.getConfig().getKeySpace(), 
-						AstyanaxCnxn.CASSANDRA_MINUTES_COUNT_CF_NAME, 
+						LogConstants.CASSANDRA_MINUTES_COUNT_CF_NAME, 
 						VolumeCountingBolt.FIELD_ROW_KEY));
 		cassandraBatchingBolt.setAckStrategy(AckStrategy.ACK_ON_WRITE);
 		

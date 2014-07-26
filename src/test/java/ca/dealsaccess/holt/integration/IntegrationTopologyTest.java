@@ -20,9 +20,9 @@ import ca.dealsaccess.holt.common.AbstractConfig.ConfigException;
 import ca.dealsaccess.holt.common.RedisConfig;
 import ca.dealsaccess.holt.jobs.LogStatsJob;
 import ca.dealsaccess.holt.log.ApacheLogEntry;
+import ca.dealsaccess.holt.log.LogConstants;
 import ca.dealsaccess.holt.redis.RedisUtils;
 import ca.dealsaccess.holt.storm.bolt.IndexerBolt;
-import ca.dealsaccess.holt.storm.bolt.VolumeCountingBolt;
 
 import com.netflix.astyanax.AstyanaxContext;
 import com.netflix.astyanax.Keyspace;
@@ -73,7 +73,7 @@ public class IntegrationTopologyTest {
 		
 		CF_USER_INFO =
 				  new ColumnFamily<String, String>(
-					AstyanaxCnxn.CASSANDRA_MINUTES_COUNT_CF_NAME,      // Column Family Name
+					LogConstants.CASSANDRA_MINUTES_COUNT_CF_NAME,      // Column Family Name
 				    StringSerializer.get(),   // Key Serializer
 				    StringSerializer.get());
 		
