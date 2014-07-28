@@ -125,7 +125,8 @@
 		<dependency>
 			<groupId>com.hmsonline</groupId>
 			<artifactId>storm-cassandra</artifactId>
-			<version>0.4.0-rc5-test-SNAPSHOT</version>
+			<version>0.4.0-rc5-SNAPSHOT</version>
+
 			<exclusions>
 				<exclusion>
 					<artifactId>slf4j-log4j12</artifactId>

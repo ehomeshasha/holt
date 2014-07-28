@@ -16,11 +16,11 @@ import org.junit.Test;
 import redis.clients.jedis.Jedis;
 import backtype.storm.utils.Utils;
 import ca.dealsaccess.holt.astyanax.AstyanaxCnxn;
+import ca.dealsaccess.holt.cassandra.CassandraDataTest;
 import ca.dealsaccess.holt.common.AbstractConfig.ConfigException;
 import ca.dealsaccess.holt.common.RedisConfig;
 import ca.dealsaccess.holt.jobs.LogStatsJob;
 import ca.dealsaccess.holt.log.ApacheLogEntry;
-import ca.dealsaccess.holt.log.LogConstants;
 import ca.dealsaccess.holt.redis.RedisUtils;
 import ca.dealsaccess.holt.storm.bolt.IndexerBolt;
 
@@ -73,7 +73,7 @@ public class IntegrationTopologyTest {
 		
 		CF_USER_INFO =
 				  new ColumnFamily<String, String>(
-					LogConstants.CASSANDRA_MINUTE_COUNT_CF_NAME,      // Column Family Name
+					CassandraDataTest.CASSANDRA_TEST_CF_NAME,      // Column Family Name
 				    StringSerializer.get(),   // Key Serializer
 				    StringSerializer.get());
 		

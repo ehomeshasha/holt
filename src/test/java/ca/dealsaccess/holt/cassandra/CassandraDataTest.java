@@ -18,7 +18,6 @@ import org.junit.Test;
 
 import ca.dealsaccess.holt.common.AbstractConfig.ConfigException;
 import ca.dealsaccess.holt.common.CassandraConfig;
-import ca.dealsaccess.holt.log.LogConstants;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
@@ -53,6 +52,8 @@ public class CassandraDataTest {
 	private Keyspace keyspace;
 	
 	private ColumnFamily<String, String> CF_COUNTER1;
+	
+	public static final String CASSANDRA_TEST_CF_NAME = "TEST_CF"; 
 	
 	private Map<String, Object> CF_COUNTER1_OPTIONS = ImmutableMap.<String, Object>builder()
 	        .put("default_validation_class", "CounterColumnType")
@@ -90,11 +91,11 @@ public class CassandraDataTest {
 		
 		
 		CF_COUNTER1 = ColumnFamily
-				.newColumnFamily(LogConstants.CASSANDRA_MINUTE_COUNT_CF_NAME, StringSerializer.get(), StringSerializer.get());
+				.newColumnFamily(CASSANDRA_TEST_CF_NAME, StringSerializer.get(), StringSerializer.get());
 		
 		
 		
-		createCFIfNotExists(CF_COUNTER1, CF_COUNTER1_OPTIONS);
+		//createCFIfNotExists(CF_COUNTER1, CF_COUNTER1_OPTIONS);
 		
 		
 	}
@@ -221,13 +222,19 @@ public class CassandraDataTest {
 	
 	@Test
 	public void dropCF() throws ConnectionException {
-		System.out.println("drop columnFamily "+LogConstants.CASSANDRA_MINUTE_COUNT_CF_NAME+".");
-		keyspace.dropColumnFamily("LoggingMinuteCounterSuper");
+		System.out.println("drop columnFamily "+CASSANDRA_TEST_CF_NAME+".");
+		keyspace.dropColumnFamily("IP_TABLE_Minute");
+		
+	}
+	
+	@Test
+	public void dropKeyspace() throws ConnectionException {
+		keyspace.dropKeyspace();
 	}
 	
 	@Test
 	public void createCF() throws ConnectionException {
-		System.out.println("create columnFamily "+LogConstants.CASSANDRA_MINUTE_COUNT_CF_NAME+".");
+		System.out.println("create columnFamily "+CASSANDRA_TEST_CF_NAME+".");
 		keyspace.createColumnFamily(CF_COUNTER1, CF_COUNTER1_OPTIONS);
 	}
 	

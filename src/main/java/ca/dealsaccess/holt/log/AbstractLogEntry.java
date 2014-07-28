@@ -35,6 +35,8 @@ public abstract class AbstractLogEntry {
 	
 	protected String city = EMPTY;
 	
+	protected boolean existed = true;
+	
 	protected static final Pattern whiteSpace = Pattern.compile("\\s+");
 	
 	protected static final Pattern slash = Pattern.compile("/");
@@ -53,64 +55,59 @@ public abstract class AbstractLogEntry {
 	
 	public abstract void parseLogText();
 	
-	private Calendar calendar = Calendar.getInstance();
-	
-	private Calendar getMinuteCalendar() {
-		calendar.setTime(date);
+	public void setDayCalendar(Calendar calendar) {
 		calendar.set(Calendar.SECOND,0);
 		calendar.set(Calendar.MILLISECOND, 0);
-		return calendar;
-	}
-	
-	private Calendar getHourCalendar() {
-		getMinuteCalendar().set(Calendar.MINUTE, 0);
-		return calendar;
-	}
-	
-	private Calendar getDayCalendar() {
-		getHourCalendar().set(Calendar.HOUR, 0);
-		return calendar;
-	}
-	
-	private Calendar getWeekCalendar() {
-		getDayCalendar().set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
-		return calendar;
-	}
-	
-	
-	private Calendar getMonthCalendar() {
-		getDayCalendar().set(Calendar.DAY_OF_MONTH, 1);
-		return calendar;
-	}
-	
-	private Calendar getYearCalendar() {
-		getDayCalendar().set(Calendar.DAY_OF_YEAR, 1);
-		return calendar;
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.HOUR, 0);
 	}
 	
 	public Long getMinuteForTime() {
-		getMinuteCalendar();
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		calendar.set(Calendar.SECOND,0);
+		calendar.set(Calendar.MILLISECOND, 0);
 		return calendar.getTimeInMillis();
 	}
-
+	
 	public Long getHourForTime() {
-		return getHourCalendar().getTimeInMillis();
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		calendar.set(Calendar.SECOND,0);
+		calendar.set(Calendar.MILLISECOND, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		return calendar.getTimeInMillis();
 	}
 	
 	public Long getDayForTime() {
-		return getDayCalendar().getTimeInMillis();
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		setDayCalendar(calendar);
+		return calendar.getTimeInMillis();
 	}
 	
 	public Long getWeekForTime() {
-		return getWeekCalendar().getTimeInMillis();
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		setDayCalendar(calendar);
+		calendar.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+		return calendar.getTimeInMillis();
 	}
 	
 	public Long getMonthForTime() {
-		return getMonthCalendar().getTimeInMillis();
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		setDayCalendar(calendar);
+		calendar.set(Calendar.DAY_OF_MONTH, 1);
+		return calendar.getTimeInMillis();
 	}
 	
 	public Long getYearForTime() {
-		return getYearCalendar().getTimeInMillis();
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		setDayCalendar(calendar);
+		calendar.set(Calendar.DAY_OF_MONTH, 1);
+		return calendar.getTimeInMillis();
 	}
 	
 	
@@ -181,12 +178,38 @@ public abstract class AbstractLogEntry {
 		return responseSize;
 	}
 
+	public String getResponseSizeLevel() {
+		String level = null;
+		if(responseSize < 1024) {
+			level = "<1K";
+		} else if(responseSize < 50*1024) {
+			level = "<50K";
+		} else if(responseSize < 100*1024) {
+			level = "<100K";
+		} else if(responseSize < 1024*1024) {
+			level = "<1M";
+		} else if(responseSize < 10*1024*1024) {
+			level = "<10M";
+		} else {
+			level = ">=10M";
+		}
+		return level;
+	}
+	
 	public String getCountry() {
 		return country;
 	}
 
 	public String getCity() {
 		return city;
+	}
+
+	public boolean isExisted() {
+		return existed;
+	}
+
+	public void setExisted(boolean existed) {
+		this.existed = existed;
 	}
 
 	

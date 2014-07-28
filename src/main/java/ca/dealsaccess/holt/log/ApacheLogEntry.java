@@ -99,6 +99,23 @@ public class ApacheLogEntry extends AbstractLogEntry {
 	}
 
 	
+
+	public String[] getIPNoneExistsArray() {
+		String[] array = new String[LogConstants.LOG_COLUMNS.length];
+		array[0] = LogConstants.FIELD_COLUMN_ALL;
+		array[1] = getIp();
+		array[2] = getUrl();
+		array[3] = getMethod();
+		array[4] = getProtocol();
+		array[5] = getExtension();
+		array[6] = String.valueOf(getStatusCode());
+		array[7] = getResponseSizeLevel();
+		array[8] = getCountry();
+		array[9] = getCity();
+		array[10] = getCountry();
+		array[11] = getCity();
+		return array;
+	}
 	
 	
 	

@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableMap;
 import com.netflix.astyanax.AstyanaxContext;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.connectionpool.NodeDiscoveryType;
+import com.netflix.astyanax.connectionpool.exceptions.BadRequestException;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.connectionpool.impl.ConnectionPoolConfigurationImpl;
 import com.netflix.astyanax.connectionpool.impl.CountingConnectionPoolMonitor;
@@ -65,10 +66,19 @@ public class AstyanaxCnxn {
 		
 	}
 	
+	public void close() {
+		if(context != null) {
+			context.shutdown();
+		}
+	}
+	
 	public void createKeyspaceIfNotExists() throws ConnectionException {
 		// Using simple strategy
+		KeyspaceDefinition ksDef = null;
+		try {
+			ksDef = keyspace.describeKeyspace();
+		} catch (BadRequestException e) {}
 		
-		KeyspaceDefinition ksDef = keyspace.describeKeyspace();
 		if(ksDef == null) {
 			keyspace.createKeyspace(ImmutableMap.<String, Object>builder()
 			    .put("strategy_options", ImmutableMap.<String, Object>builder()
@@ -93,8 +103,11 @@ public class AstyanaxCnxn {
 		return keyspace;
 	}
 
-	public void createCFIfNotExists(String CFName) throws ConnectionException {
-		createCFIfNotExists(CFName, null);
+	
+	
+	
+	public void createCFIfNotExists(String cfName) throws ConnectionException {
+		createCFIfNotExists(cfName, null);
 	}
 	
 	public void createCFIfNotExists(ColumnFamily<?, ?> CF) throws ConnectionException {
@@ -102,13 +115,13 @@ public class AstyanaxCnxn {
 	}
 	
 	
-	public void createCFIfNotExists(String CFName, Map<String, Object> CF_Options) throws ConnectionException {
+	public void createCFIfNotExists(String cfName, Map<String, Object> CF_Options) throws ConnectionException {
 		
 		KeyspaceDefinition ksDef = keyspace.describeKeyspace();
-        ColumnFamilyDefinition cfDef = ksDef.getColumnFamily(CFName);
+        ColumnFamilyDefinition cfDef = ksDef.getColumnFamily(cfName);
         if (cfDef == null) {
         	ColumnFamily<String, String> CF_STANDARD1 = ColumnFamily
-    				.newColumnFamily(CFName, StringSerializer.get(), StringSerializer.get());
+    				.newColumnFamily(cfName, StringSerializer.get(), StringSerializer.get());
         	keyspace.createColumnFamily(CF_STANDARD1, CF_Options);
         }
 	}
@@ -124,8 +137,8 @@ public class AstyanaxCnxn {
         
 	}
 	
-	public void createCounterCFIfNotExists(String CFName) throws ConnectionException {
-		createCFIfNotExists(CFName, CF_COUNTER1_OPTIONS);
+	public void createCounterCFIfNotExists(String cfName) throws ConnectionException {
+		createCFIfNotExists(cfName, CF_COUNTER1_OPTIONS);
 	}
 	
 	public void createCounterCFIfNotExists(ColumnFamily<?, ?> CF) throws ConnectionException {
@@ -134,6 +147,21 @@ public class AstyanaxCnxn {
 	}
 	
 	
+	public void createAllCFNeeded() throws ConnectionException {
+		LogStatsColumnFamily logCF = new LogStatsColumnFamily(this);
+		logCF.createAllCounterCFIfNotExist();
+		logCF.createAllIPCFIfNotExist();
+	}
+	
+	public ColumnFamily<String, String> getCFbyName(String cfName) {
+		return ColumnFamily.newColumnFamily(cfName, StringSerializer.get(), StringSerializer.get());
+	}
+	
+	
+	
+		
+		
+		
 	
 	
 }

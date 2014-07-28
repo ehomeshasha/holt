@@ -1,91 +1,53 @@
 package ca.dealsaccess.holt.log;
 
+import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+
+import ca.dealsaccess.holt.astyanax.AstyanaxCnxn;
 import backtype.storm.task.OutputCollector;
+import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
 
 public abstract class AbstractLogStats {
 
-	
-	
-	protected OutputCollector collector;
-	
-	protected static final long ONE = 1L;
+	protected static final String FIELD_COLUMN_ALL_VALUE = "ALL";
 	
 	protected AbstractLogEntry entry;
 	
+	protected OutputCollector collector;
+	
+	protected Tuple tuple;
+	
+	protected AstyanaxCnxn astyanaxCnxn;
+	
+	protected Keyspace keyspace;
+	
+	protected static final long ONE = 1L;
+	
+	protected static final long ZERO = 0L;
+	
+	
+	
 	protected String rowKeyValue = null;
-	
-	protected static final String ColumnNameForAll = "ALL";
-	
-	protected boolean visited = true;
-	
-	protected boolean incremented = true;
 	
 	protected String duration = null;
 	
+	protected boolean existed = false;
 	
-	public static final String MINUTE = "Minute";
-	
-	public static final String HOUR = "Hour";
-	
-	public static final String DAY = "Day";
-	
-	public static final String WEEK = "Week";
-	
-	public static final String MONTH = "Month";
-	
-	public static final String YEAR = "Year";
-	
-	public static final String FIELD_ROW_KEY = "rowKey";
-	
-	public static final String FIELD_INCREMENT = "IncrementAmount";
-	
-	public static final String FIELD_COLUMN_ALL = "ALL";
-	
-	public static final String FIELD_COLUMN_IP = "IP";
-	
-	public static final String FIELD_COLUMN_URL = "Url";
-	
-	public static final String FIELD_COLUMN_METHOD = "Method";
-	
-	public static final String FIELD_COLUMN_PROTOCOL = "Protocol";
-	
-	public static final String FIELD_COLUMN_EXT = "Extension";
-	
-	public static final String FIELD_COLUMN_STATUSCODE = "StatusCode";
-	
-	public static final String FIELD_COLUMN_RESPONSESIZE = "ResponseSize";
-	
-	public static final String FIELD_COLUMN_COUNTRY = "Country";
-	
-	public static final String FIELD_COLUMN_CITY = "City";
-	
-	
-	
-	
-	public static final String FIELD_COLUMN_PV = "PV";
-	
-	
-	
-	public static final String FIELD_COLUMN_IP_COUNTRY = "IP_COUNTRY";
-	
-	public static final String FIELD_COLUMN_IP_CITY = "IP_CITY";
-	
-	
-	
-	
-	
-	public static final String FIELD_COLUMN_IP_NUM = "ip_num";
-	
-	public static final String FIELD_COLUMN_ALL_VALUE = "All";
-	
-	
-	
-	
-	
-	public AbstractLogStats(ApacheLogEntry apacheLogEntry, OutputCollector collector) {
-		entry = apacheLogEntry;
+	public AbstractLogStats(AbstractLogEntry entry, OutputCollector collector, Tuple tuple, AstyanaxCnxn astyanaxCnxn) {
+		this.entry = entry;
 		this.collector = collector;
-		
+		this.tuple = tuple;
+		this.astyanaxCnxn = astyanaxCnxn;
+		this.keyspace = astyanaxCnxn.getKeyspace();
+		this.existed = entry.isExisted();
+	}
+
+
+	public AbstractLogStats(ApacheLogEntry entry, OutputCollector collector, Tuple tuple) {
+		this.entry = entry;
+		this.collector = collector;
+		this.tuple = tuple;
 	}
 
 
@@ -95,38 +57,36 @@ public abstract class AbstractLogStats {
 	}
 
 	
-
-
-	public abstract void emit(); 
-
-
 	public String getRowKeyValue() {
 		String value = null;
-		if(duration.equals(MINUTE)) {
+		if(duration.equals(LogConstants.MINUTE)) {
 			value = entry.getMinuteForTime().toString();
-		} else if(duration.equals(HOUR)) {
+		} else if(duration.equals(LogConstants.HOUR)) {
 			value = entry.getHourForTime().toString();
-		} else if(duration.equals(DAY)) {
+		} else if(duration.equals(LogConstants.DAY)) {
 			value = entry.getDayForTime().toString();
-		} else if(duration.equals(WEEK)) {
+		} else if(duration.equals(LogConstants.WEEK)) {
 			value = entry.getWeekForTime().toString();
-		} else if(duration.equals(MONTH)) {
+		} else if(duration.equals(LogConstants.MONTH)) {
 			value = entry.getMonthForTime().toString();
-		} else if(duration.equals(YEAR)) {
+		} else if(duration.equals(LogConstants.YEAR)) {
 			value = entry.getYearForTime().toString();
 		}
 		return value;
 	}
 
 
-	public void setVisited(boolean visited) {
-		this.visited = visited;
+	public void emitLogEntry() {
+		collector.emit(new Values(entry));
+		collector.ack(tuple);
 	}
 
 
-	public void setIncrement(boolean incremented) {
-		this.incremented = incremented; 
-		
-	}
+	
+
+	public abstract void persistenceCassandra() throws ConnectionException;
+
+
+	
 
 }
