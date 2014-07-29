@@ -47,5 +47,5 @@ echo zzy8945620 | sudo -u root -S /etc/init.d/cassandra start
 echo zzy8945620 | sudo -u root -S service opscenterd start
 
 #start kafka server
-#kafka-server-start.sh $KAFKA_HOME/config/server.properties
+kafka-server-start.sh $KAFKA_HOME/config/server.properties
 
