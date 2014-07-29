@@ -1,5 +1,9 @@
 package ca.dealsaccess.holt.log;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.commons.io.FilenameUtils;
 import org.junit.Test;
 
 import com.google.gson.Gson;
@@ -24,6 +28,20 @@ public class ApacheLogEntryTest {
 		System.out.printf("%s: %s", "parsedLogEntry", gson.toJson(logEntry));
 		System.out.println();
 		
+	}
+	
+	Pattern pattern = Pattern.compile("^([0-9a-zA-Z]+)");
+	
+	@Test
+	public void getExtension() {
+		String url = "/index.php?home=index&act=jump&id=2_325400";
+		String ext = FilenameUtils.getExtension(url);
+		
+		Matcher matcher = pattern.matcher(ext);
+		matcher.find();
+		String result = matcher.group(1);
+		
+		System.out.println(result);
 	}
 	
 }

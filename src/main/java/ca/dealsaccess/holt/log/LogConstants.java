@@ -2,6 +2,8 @@ package ca.dealsaccess.holt.log;
 
 
 
+
+
 public class LogConstants {
 	
 	public static final String LOG_TEXT = "LogText";
@@ -95,9 +97,4 @@ public class LogConstants {
 	
 	
 	
-	
-	
-	
-	
-
 }

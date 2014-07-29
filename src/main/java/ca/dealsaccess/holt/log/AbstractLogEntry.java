@@ -7,7 +7,11 @@ import java.util.regex.Pattern;
 
 public abstract class AbstractLogEntry {
 	
-	protected String EMPTY = "";
+	protected static final Pattern extensionPattern = Pattern.compile("^([0-9a-zA-Z]+)");
+	
+	protected static final String SLASH = "/";
+	
+	protected static final String EMPTY = "";
 	
 	protected String logText = EMPTY;
 	

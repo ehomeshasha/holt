@@ -73,12 +73,27 @@ public class ApacheLogEntry extends AbstractLogEntry {
 			method = dateMatcher.group(1);
 			url = dateMatcher.group(2);
 			protocol = dateMatcher.group(3);
-			extension = FilenameUtils.getExtension(url);
+			extension = getExtensionbyUrl(url);
 			
 			return tmpStr.replaceFirst(urlPattern.toString(), "");
 		} else {
 			throw new LogEntryException(this.getClass().getName()+": urlPattern cannot match for apache log");
 		}
+	}
+
+	private String getExtensionbyUrl(String url) {
+		String ext = FilenameUtils.getExtension(url);
+		
+		if(ext.equals(EMPTY) || ext == null) {
+			return SLASH;
+		}
+		Matcher matcher = extensionPattern.matcher(ext);
+		if(matcher.find()) {
+			return matcher.group(1);
+		}
+		return SLASH;
+		
+		
 	}
 
 	//example: 14/Jul/2014:22:23:29 -0400
