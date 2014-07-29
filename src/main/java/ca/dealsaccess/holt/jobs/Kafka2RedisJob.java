@@ -31,7 +31,7 @@ public final class Kafka2RedisJob extends AbstractStormJob {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Kafka2RedisJob.class);
 
-	private boolean isLocal = true;
+	private boolean isLocal = false;
 	
 	private Config conf = new Config();
 	
@@ -81,10 +81,9 @@ public final class Kafka2RedisJob extends AbstractStormJob {
 			buildTridentTopology();
 		}
 		
-		if (args != null && args.length > 0) {
-			isLocal = false;
+		if(hasOption("local")) {
+			isLocal = true;
 		}
-		isLocal = true;
 		if (!isLocal) {
 			conf.setNumWorkers(1);
 			StormSubmitter.submitTopology(args[0], conf, topology);
@@ -112,6 +111,7 @@ public final class Kafka2RedisJob extends AbstractStormJob {
 	private void addOptions() {
 		addOption("topic", "t", "the input kafka topic", true);
 		addFlag("trident", "tr", "whether using trident topology");
+		addFlag("local", "l", "whether runing on local model or on cluster");
 	}
 
 	private void createBuilder() throws ConfigException, IOException {

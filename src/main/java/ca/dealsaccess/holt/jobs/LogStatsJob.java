@@ -50,7 +50,7 @@ public final class LogStatsJob extends AbstractStormJob {
 	
 	private static final String clusterTopologyName = "logstats-cluster";
 	
-	private boolean isLocal = true;
+	private boolean isLocal = false;
 	
 	private TopologyBuilder builder;
 	
@@ -99,7 +99,10 @@ public final class LogStatsJob extends AbstractStormJob {
 	}
 	
 	private void run() throws AlreadyAliveException, InvalidTopologyException {
-		isLocal = true;
+		if(hasOption("local")) {
+			isLocal = true;
+		}
+		
 		if (!isLocal) {
 			runCluster();
 		} else {
@@ -133,6 +136,7 @@ public final class LogStatsJob extends AbstractStormJob {
 	private void addOptions() {
 		addOption("redisKey", "rk", "the key of redis list", true);
 		addFlag("trident", "tr", "whether using trident topology");
+		addFlag("local", "l", "whether runing on local model or on cluster");
 	}
 
 	private void createBuilder() throws ConnectionException, ConfigException {
