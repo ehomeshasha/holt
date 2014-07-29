@@ -35,11 +35,7 @@ import ca.dealsaccess.holt.storm.spout.RedisFixedBatchSpout;
 import ca.dealsaccess.holt.storm.spout.RedisLPOPFixedBatchSpout;
 import ca.dealsaccess.holt.storm.bolt.IndexerBolt;
 import ca.dealsaccess.holt.storm.bolt.LogRulesBolt;
-import ca.dealsaccess.holt.storm.bolt.duration.IPExistsLogStatsMinuteBolt;
-import ca.dealsaccess.holt.storm.bolt.duration.IPExistsMinuteBolt;
-import ca.dealsaccess.holt.storm.bolt.duration.IPNoneExistsLogStatsMinuteBolt;
-import ca.dealsaccess.holt.storm.bolt.duration.IPNoneExistsMinuteBolt;
-import ca.dealsaccess.holt.storm.bolt.duration.MinuteBolt;
+import ca.dealsaccess.holt.storm.bolt.LogStatsBolt;
 import ca.dealsaccess.holt.storm.spout.RedisSpout;
 import ca.dealsaccess.holt.trident.function.IndexerFunction;
 import ca.dealsaccess.holt.trident.function.LogRulesFunction;
@@ -68,7 +64,9 @@ public final class LogStatsJob extends AbstractStormJob {
 	
 	private AstyanaxCnxn astyanaxCnxn;
 	
+	private static final String LOGSTATS = "LogStats";
 	
+	private static final String BOLT = "Bolt";
 
 	public static void main(String[] args) {
 
@@ -149,21 +147,14 @@ public final class LogStatsJob extends AbstractStormJob {
 		// -i [LOG_ENTRY: {ApacheLogEntry}] -o [LOG_ENTRY: {ApacheLogEntry}, LOG_INDEX_ID: {String}]
 		builder.setBolt("indexerBolt", new IndexerBolt(), 1).shuffleGrouping("logRules");
 
-		// -i [LOG_ENTRY: {ApacheLogEntry}] -o [LOG_ENTRY: {ApacheLogEntry}]
-		builder.setBolt("MinuteBolt", new MinuteBolt(), 1).shuffleGrouping("logRules");
-		
-		// -i [LOG_ENTRY: {ApacheLogEntry}] -o [LOG_ENTRY: {ApacheLogEntry}] with IPNoneExists
-		builder.setBolt("IPNoneExistsMinuteBolt", new IPNoneExistsMinuteBolt(), 1).shuffleGrouping("MinuteBolt");
-		
-		// -i [LOG_ENTRY: {ApacheLogEntry}] -o [LOG_ENTRY: {ApacheLogEntry}] with IPExists
-		builder.setBolt("IPExistsMinuteBolt", new IPExistsMinuteBolt(), 1).shuffleGrouping("MinuteBolt");
-				
 		setupCassandra();
 		
-		builder.setBolt("IPNoneExistsLogStatsMinuteBolt", new IPNoneExistsLogStatsMinuteBolt(), 1).shuffleGrouping("IPNoneExistsMinuteBolt");
-		
-		builder.setBolt("IPExistsLogStatsMinuteBolt", new IPExistsLogStatsMinuteBolt(), 1).shuffleGrouping("IPExistsMinuteBolt");
-		
+		StringBuilder sb = new StringBuilder();
+		for(String duration : LogConstants.LOG_DURATION) {
+			String boltName = sb.append(LOGSTATS).append(duration).append(BOLT).toString();
+			builder.setBolt(boltName, new LogStatsBolt(duration), 1).shuffleGrouping("logRules");
+			sb.setLength(0);
+		}
 		
 	}
 	

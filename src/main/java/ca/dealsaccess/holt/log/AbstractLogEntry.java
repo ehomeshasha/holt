@@ -59,6 +59,7 @@ public abstract class AbstractLogEntry {
 		calendar.set(Calendar.SECOND,0);
 		calendar.set(Calendar.MILLISECOND, 0);
 		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.AM_PM, Calendar.AM);
 		calendar.set(Calendar.HOUR, 0);
 	}
 	
@@ -106,7 +107,7 @@ public abstract class AbstractLogEntry {
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(date);
 		setDayCalendar(calendar);
-		calendar.set(Calendar.DAY_OF_MONTH, 1);
+		calendar.set(Calendar.DAY_OF_YEAR, 1);
 		return calendar.getTimeInMillis();
 	}
 	
