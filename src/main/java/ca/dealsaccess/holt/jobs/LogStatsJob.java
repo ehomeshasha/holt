@@ -30,6 +30,7 @@ import ca.dealsaccess.holt.common.AbstractStormJob;
 import ca.dealsaccess.holt.common.RedisConstants;
 import ca.dealsaccess.holt.log.ApacheLogEntry;
 import ca.dealsaccess.holt.log.LogConstants;
+import ca.dealsaccess.holt.mysql.MySQLClient;
 import ca.dealsaccess.holt.redis.RedisUtils;
 import ca.dealsaccess.holt.storm.spout.RedisFixedBatchSpout;
 import ca.dealsaccess.holt.storm.spout.RedisLPOPFixedBatchSpout;
@@ -67,6 +68,8 @@ public final class LogStatsJob extends AbstractStormJob {
 	private static final String LOGSTATS = "LogStats";
 	
 	private static final String BOLT = "Bolt";
+	
+	private MySQLClient mysqlClient;
 
 	public static void main(String[] args) {
 
@@ -137,6 +140,7 @@ public final class LogStatsJob extends AbstractStormJob {
 		addOption("redisKey", "rk", "the key of redis list", true);
 		addFlag("trident", "tr", "whether using trident topology");
 		addFlag("local", "l", "whether runing on local model or on cluster");
+		addOption("persistence", "p", "data persistence storage", "mysql");
 	}
 
 	private void createBuilder() throws ConnectionException, ConfigException {
@@ -151,17 +155,38 @@ public final class LogStatsJob extends AbstractStormJob {
 		// -i [LOG_ENTRY: {ApacheLogEntry}] -o [LOG_ENTRY: {ApacheLogEntry}, LOG_INDEX_ID: {String}]
 		builder.setBolt("indexerBolt", new IndexerBolt(), 1).shuffleGrouping("logRules");
 
-		setupCassandra();
-		
-		StringBuilder sb = new StringBuilder();
-		for(String duration : LogConstants.LOG_DURATION) {
-			String boltName = sb.append(LOGSTATS).append(duration).append(BOLT).toString();
-			builder.setBolt(boltName, new LogStatsBolt(duration), 1).shuffleGrouping("logRules");
-			sb.setLength(0);
+		if(getOption("persistence").equals("mysql")) {
+			setupMySQL();
+			
+			
+			
+			
+			
+			
+			
+		} else if(getOption("persistence").equals("cassandra")) {
+			setupCassandra();
+			
+			StringBuilder sb = new StringBuilder();
+			for(String duration : LogConstants.LOG_DURATION) {
+				String boltName = sb.append(LOGSTATS).append(duration).append(BOLT).toString();
+				builder.setBolt(boltName, new LogStatsBolt(duration), 1).shuffleGrouping("logRules");
+				sb.setLength(0);
+			}
+			
 		}
+		
+		
+		
+		
 		
 	}
 	
+	private void setupMySQL() throws ConfigException {
+		mysqlClient = new MySQLClient();
+		mysqlClient.createLogStatsTableIfnotExists();
+	}
+
 	private void buildTopology() throws ConfigException, ConnectionException {
 		createBuilder();
 		topology = builder.createTopology();

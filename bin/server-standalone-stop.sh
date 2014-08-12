@@ -2,15 +2,15 @@
 
 
 #stop kafka server
-${KAFKA_HOME}/bin/kafka-server-stop.sh
+#${KAFKA_HOME}/bin/kafka-server-stop.sh
 #ps ax | grep -i 'kafka\.Kafka' | grep java | grep -v grep | awk '{print $1}' | xargs kill -SIGINT
 
 #stop cassandra opscenter
-echo newpaltz2013 | sudo -u root -S service opscenterd stop 
+#echo newpaltz2013 | sudo -u root -S service opscenterd stop 
 
 #stop cassandra
-set -x
-echo newpaltz2013 | sudo -u root -S /etc/init.d/cassandra stop 
+#set -x
+#echo newpaltz2013 | sudo -u root -S /etc/init.d/cassandra stop 
 
 #stop elasticsearch
 ps -ef | grep "elasticsearch" | grep -v grep | awk {'print $2'} | xargs kill -15
@@ -27,5 +27,5 @@ ps -ef | grep "redis-server" | grep -v grep | awk {'print $2'} | xargs kill -15
 ps ax | grep -i 'zookeeper' | grep -v grep | awk '{print $1}' | xargs kill -15
 
 #stop flume agent
-ps -ef | grep "flume-kafka-conf.properties" | grep -v grep | awk {'print $2'} | xargs kill -SIGINT
+#ps -ef | grep "flume-kafka-conf.properties" | grep -v grep | awk {'print $2'} | xargs kill -SIGINT
 
