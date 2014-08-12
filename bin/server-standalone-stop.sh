@@ -6,11 +6,11 @@ ${KAFKA_HOME}/bin/kafka-server-stop.sh
 #ps ax | grep -i 'kafka\.Kafka' | grep java | grep -v grep | awk '{print $1}' | xargs kill -SIGINT
 
 #stop cassandra opscenter
-echo zzy8945620 | sudo -u root -S service opscenterd stop 
+echo newpaltz2013 | sudo -u root -S service opscenterd stop 
 
 #stop cassandra
 set -x
-echo zzy8945620 | sudo -u root -S /etc/init.d/cassandra stop 
+echo newpaltz2013 | sudo -u root -S /etc/init.d/cassandra stop 
 
 #stop elasticsearch
 ps -ef | grep "elasticsearch" | grep -v grep | awk {'print $2'} | xargs kill -15

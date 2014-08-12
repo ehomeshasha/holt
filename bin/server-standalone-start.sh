@@ -41,10 +41,10 @@ nohup storm ui &
 /home/hadoop-user/scout_workspace/elasticsearch-0.20.1/bin/elasticsearch
 
 #start cassandra
-echo zzy8945620 | sudo -u root -S /etc/init.d/cassandra start
+echo newpaltz2013 | sudo -u root -S /etc/init.d/cassandra start
 
 #start cassandra opscenter
-echo zzy8945620 | sudo -u root -S service opscenterd start
+echo newpaltz2013 | sudo -u root -S service opscenterd start
 
 #start kafka server
 kafka-server-start.sh $KAFKA_HOME/config/server.properties

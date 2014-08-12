@@ -102,7 +102,7 @@ sed -i -e "s;\(producer\.sinks\.r\.custom\.topic\.name[[:space:]]*=[[:space:]]*\
 echo "flume-ng agent -n producer -f ${HOLT_HOME}/conf/flume-kafka-conf.properties --classpath $KAFKA_HOME/libs/\*:${HOLT_JAR}"
 read -p "moves data in $2 to kafka using flume?" yn
 case $yn in
-	[Yy]* ) flume-ng agent -n producer -f $HOLT_HOME/conf/flume-kafka-conf.properties --classpath $KAFKA_HOME/libs/\*:${HOLT_JAR};;
+	[Yy]* ) nohup flume-ng agent -n producer -f $HOLT_HOME/conf/flume-kafka-conf.properties --classpath $KAFKA_HOME/libs/\*:${HOLT_JAR} &;;
 	[Nn]* ) exit;;
 	* ) echo "Please answer yes or no.";;
 esac
