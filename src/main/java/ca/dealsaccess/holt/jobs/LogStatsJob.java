@@ -1,6 +1,7 @@
 package ca.dealsaccess.holt.jobs;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,6 +38,7 @@ import ca.dealsaccess.holt.storm.spout.RedisLPOPFixedBatchSpout;
 import ca.dealsaccess.holt.storm.bolt.IndexerBolt;
 import ca.dealsaccess.holt.storm.bolt.LogRulesBolt;
 import ca.dealsaccess.holt.storm.bolt.LogStatsBolt;
+import ca.dealsaccess.holt.storm.bolt.LogStatsRedisBolt;
 import ca.dealsaccess.holt.storm.spout.RedisSpout;
 import ca.dealsaccess.holt.trident.function.IndexerFunction;
 import ca.dealsaccess.holt.trident.function.LogRulesFunction;
@@ -68,6 +70,8 @@ public final class LogStatsJob extends AbstractStormJob {
 	private static final String LOGSTATS = "LogStats";
 	
 	private static final String BOLT = "Bolt";
+
+	private static final String REDIS = "Redis";
 	
 	private MySQLClient mysqlClient;
 
@@ -85,6 +89,9 @@ public final class LogStatsJob extends AbstractStormJob {
 		} catch (IOException e) {
 			LOG.error("Unexpected IOException, exiting abnormally,", e);
 			System.exit(1);
+		} catch (SQLException e) {
+			LOG.error("Unexpected SQLException, exiting abnormally,", e);
+			System.exit(1);
 		} catch (Exception e) {
 			LOG.error("Unexpected Exception, exiting abnormally,", e);
 			System.exit(1);
@@ -94,7 +101,7 @@ public final class LogStatsJob extends AbstractStormJob {
 	}
 
 	private void initializeAndRun(String[] args) throws ConfigException, AlreadyAliveException, InvalidTopologyException,
-			InterruptedException, IOException, ConnectionException {
+			InterruptedException, IOException, ConnectionException, SQLException {
 		LOG.info("Program start on " + this.getClass().getName());
 		initialize(args);
 		run();
@@ -113,7 +120,7 @@ public final class LogStatsJob extends AbstractStormJob {
 		}
 	}
 	
-	private void initialize(String[] args) throws ConfigException, IOException, ConnectionException {
+	private void initialize(String[] args) throws ConfigException, IOException, ConnectionException, SQLException {
 		addOptions();
 		if (parseArguments(args) == null) {
 			return;
@@ -140,10 +147,10 @@ public final class LogStatsJob extends AbstractStormJob {
 		addOption("redisKey", "rk", "the key of redis list", true);
 		addFlag("trident", "tr", "whether using trident topology");
 		addFlag("local", "l", "whether runing on local model or on cluster");
-		addOption("persistence", "p", "data persistence storage", "mysql");
+		addOption("persistence", "p", "data persistence storage", "redis");
 	}
 
-	private void createBuilder() throws ConnectionException, ConfigException {
+	private void createBuilder() throws ConnectionException, ConfigException, SQLException {
 		builder = new TopologyBuilder();
 
 		// -o LOG_TEXT: {String}
@@ -155,10 +162,16 @@ public final class LogStatsJob extends AbstractStormJob {
 		// -i [LOG_ENTRY: {ApacheLogEntry}] -o [LOG_ENTRY: {ApacheLogEntry}, LOG_INDEX_ID: {String}]
 		builder.setBolt("indexerBolt", new IndexerBolt(), 1).shuffleGrouping("logRules");
 
-		if(getOption("persistence").equals("mysql")) {
-			setupMySQL();
+		if(getOption("persistence").equals("redis")) {
+			//setupMySQL();
 			
 			
+			StringBuilder sb = new StringBuilder();
+			for(String duration : LogConstants.LOG_DURATION) {
+				String boltName = sb.append(LOGSTATS).append(duration).append(REDIS).append(BOLT).toString();
+				builder.setBolt(boltName, new LogStatsRedisBolt(duration), 1).shuffleGrouping("logRules");
+				sb.setLength(0);
+			}
 			
 			
 			
@@ -182,12 +195,12 @@ public final class LogStatsJob extends AbstractStormJob {
 		
 	}
 	
-	private void setupMySQL() throws ConfigException {
-		mysqlClient = new MySQLClient();
-		mysqlClient.createLogStatsTableIfnotExists();
-	}
+	//private void setupMySQL() throws ConfigException, SQLException {
+	//	mysqlClient = new MySQLClient();
+	//	mysqlClient.createLogStatsTableIfnotExists();
+	//}
 
-	private void buildTopology() throws ConfigException, ConnectionException {
+	private void buildTopology() throws ConfigException, ConnectionException, SQLException {
 		createBuilder();
 		topology = builder.createTopology();
 	}
