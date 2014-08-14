@@ -86,7 +86,7 @@ public final class Kafka2RedisJob extends AbstractStormJob {
 		}
 		if (!isLocal) {
 			conf.setNumWorkers(1);
-			StormSubmitter.submitTopology(args[0], conf, topology);
+			StormSubmitter.submitTopology("logredis-cluster", conf, topology);
 		} else {
 			conf.setNumWorkers(1);
 			conf.setMaxTaskParallelism(1);
