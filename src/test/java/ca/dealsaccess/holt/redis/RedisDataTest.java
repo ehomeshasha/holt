@@ -51,7 +51,7 @@ public class RedisDataTest {
 	}
 	
 	@Test
-	public void writeTestLogToRedis() throws IOException {
+	public void writeLogs() throws IOException {
 		
 		BufferedReader br = new BufferedReader(new FileReader("test.log"));
 		String line = null;

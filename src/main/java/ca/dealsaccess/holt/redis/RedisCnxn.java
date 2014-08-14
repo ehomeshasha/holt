@@ -5,6 +5,7 @@ import java.util.Map;
 import redis.clients.jedis.Jedis;
 import ca.dealsaccess.holt.log.ApacheLogEntry;
 import ca.dealsaccess.holt.log.LogConstants;
+import ca.dealsaccess.holt.util.GsonUtils;
 
 public class RedisCnxn {
 
@@ -63,7 +64,7 @@ public class RedisCnxn {
 		
 		for(int i=0;i<LogConstants.LOG_COLUMNS.length;i++) {
 			String innerKey = columnArray[i];
-			String key = sb.append(duration).append(delimiter).append(rowKey).append(delimiter).append(LogConstants.LOG_COLUMNS[i]).toString();
+			String key = sb.append(duration).append(delimiter).append(LogConstants.LOG_COLUMNS[i]).append(delimiter).append(rowKey).toString();
 			sb.setLength(0);
 			Map<String, String> dataMap = jedis.hgetAll(key);
 			if(!dataMap.containsKey(innerKey)) {
@@ -73,6 +74,7 @@ public class RedisCnxn {
 			}
 			jedis.hmset(key, dataMap);
 			
+			//GsonUtils.print(key, jedis.hgetAll(key));
 		}
 		
 		
