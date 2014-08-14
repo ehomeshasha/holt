@@ -1,43 +1,10 @@
 package ca.dealsaccess.holt.redis;
 
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
-import javax.sql.DataSource;
-
-import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.ResultSetHandler;
-
 import redis.clients.jedis.Jedis;
-import backtype.storm.task.OutputCollector;
-import backtype.storm.tuple.Tuple;
-import ca.dealsaccess.holt.astyanax.LogStatsColumnFamily;
-import ca.dealsaccess.holt.common.AbstractConfig.ConfigException;
-import ca.dealsaccess.holt.common.CassandraConfig;
-import ca.dealsaccess.holt.common.MySQLConfig;
 import ca.dealsaccess.holt.log.ApacheLogEntry;
 import ca.dealsaccess.holt.log.LogConstants;
-import ca.dealsaccess.holt.util.GsonUtils;
-
-import com.google.common.collect.ImmutableMap;
-import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
-import com.netflix.astyanax.AstyanaxContext;
-import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.connectionpool.NodeDiscoveryType;
-import com.netflix.astyanax.connectionpool.exceptions.BadRequestException;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.astyanax.connectionpool.impl.ConnectionPoolConfigurationImpl;
-import com.netflix.astyanax.connectionpool.impl.CountingConnectionPoolMonitor;
-import com.netflix.astyanax.ddl.ColumnFamilyDefinition;
-import com.netflix.astyanax.ddl.KeyspaceDefinition;
-import com.netflix.astyanax.impl.AstyanaxConfigurationImpl;
-import com.netflix.astyanax.model.ColumnFamily;
-import com.netflix.astyanax.serializers.StringSerializer;
-import com.netflix.astyanax.thrift.ThriftFamilyFactory;
 
 public class RedisCnxn {
 
@@ -53,9 +20,6 @@ public class RedisCnxn {
 	
 	private String duration;
 	
-	private OutputCollector collector;
-	
-	private Tuple tuple;
 	
 	private static final String delimiter = "$#$";
 	
@@ -65,23 +29,41 @@ public class RedisCnxn {
 		this.jedis = jedis;
 	}
 
-	public RedisCnxn(Jedis jedis, ApacheLogEntry entry, String duration, OutputCollector collector, Tuple tuple) {
+	public RedisCnxn(Jedis jedis, ApacheLogEntry entry, String duration) {
 		this.jedis = jedis;
 		this.entry = entry;
 		this.duration = duration;
-		this.collector = collector;
-		this.tuple = tuple;
 	}
 
 	private StringBuilder sb = new StringBuilder();
 	
+	public String getRowKeyValue() {
+		String value = null;
+		if(duration.equals(LogConstants.MINUTE)) {
+			value = entry.getMinuteForTime().toString();
+		} else if(duration.equals(LogConstants.HOUR)) {
+			value = entry.getHourForTime().toString();
+		} else if(duration.equals(LogConstants.DAY)) {
+			value = entry.getDayForTime().toString();
+		} else if(duration.equals(LogConstants.WEEK)) {
+			value = entry.getWeekForTime().toString();
+		} else if(duration.equals(LogConstants.MONTH)) {
+			value = entry.getMonthForTime().toString();
+		} else if(duration.equals(LogConstants.YEAR)) {
+			value = entry.getYearForTime().toString();
+		}
+		return value;
+	}
+	
+	
 	public void persistence() {
 		
 		String[] columnArray = ((ApacheLogEntry) entry).getIPNoneExistsArray();
+		String rowKey = getRowKeyValue();
 		
 		for(int i=0;i<LogConstants.LOG_COLUMNS.length;i++) {
 			String innerKey = columnArray[i];
-			String key = sb.append(duration).append(delimiter).append(LogConstants.LOG_COLUMNS[i]).toString();
+			String key = sb.append(duration).append(delimiter).append(rowKey).append(delimiter).append(LogConstants.LOG_COLUMNS[i]).toString();
 			sb.setLength(0);
 			Map<String, String> dataMap = jedis.hgetAll(key);
 			if(!dataMap.containsKey(innerKey)) {
@@ -90,7 +72,7 @@ public class RedisCnxn {
 				dataMap.put(innerKey, Integer.valueOf((Integer.parseInt(dataMap.get(innerKey))+1)).toString());
 			}
 			jedis.hmset(key, dataMap);
-			GsonUtils.print(key, dataMap);
+			
 		}
 		
 		

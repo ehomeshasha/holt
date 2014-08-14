@@ -31,7 +31,6 @@ import ca.dealsaccess.holt.common.AbstractStormJob;
 import ca.dealsaccess.holt.common.RedisConstants;
 import ca.dealsaccess.holt.log.ApacheLogEntry;
 import ca.dealsaccess.holt.log.LogConstants;
-import ca.dealsaccess.holt.mysql.MySQLClient;
 import ca.dealsaccess.holt.redis.RedisUtils;
 import ca.dealsaccess.holt.storm.spout.RedisFixedBatchSpout;
 import ca.dealsaccess.holt.storm.spout.RedisLPOPFixedBatchSpout;
@@ -73,7 +72,6 @@ public final class LogStatsJob extends AbstractStormJob {
 
 	private static final String REDIS = "Redis";
 	
-	private MySQLClient mysqlClient;
 
 	public static void main(String[] args) {
 

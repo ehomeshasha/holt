@@ -1,7 +1,6 @@
 package ca.dealsaccess.holt.mysql;
 
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +13,6 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import ca.dealsaccess.holt.common.AbstractConfig.ConfigException;
 import ca.dealsaccess.holt.common.MySQLConfig;
 import ca.dealsaccess.holt.log.LogConstants;
-import ca.dealsaccess.holt.util.GsonUtils;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 
@@ -140,8 +138,5 @@ public class MySQLClient {
 		
 	}
 
-	private void createCounterCFIfNotExists(String tName) {
-		
-		
-	}
+	
 }
