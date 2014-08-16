@@ -6,11 +6,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import redis.clients.jedis.Jedis;
+import ca.dealsaccess.holt.astyanax.LogStatsColumnFamily;
 import ca.dealsaccess.holt.common.RedisConstants;
 import ca.dealsaccess.holt.log.ApacheLogEntry;
 import ca.dealsaccess.holt.log.LogConstants;
 import ca.dealsaccess.holt.redis.RedisCnxn;
-
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
@@ -41,7 +41,7 @@ public class LogStatsRedisBolt extends BaseRichBolt {
     
     private int port;
     
-    
+    private String IPTableName;
     
 	@SuppressWarnings("rawtypes")
 	@Override
@@ -52,12 +52,14 @@ public class LogStatsRedisBolt extends BaseRichBolt {
         port = Integer.valueOf(conf.get(RedisConstants.REDIS_PORT).toString());
         jedis = new Jedis(host, port);
 		jedis.connect();
+		
+		IPTableName = LogStatsColumnFamily.IP_TABLE+"_"+duration;
 	}
 
 	@Override
 	public void execute(Tuple input) {
 		ApacheLogEntry entry = (ApacheLogEntry) input.getValueByField(LogConstants.LOG_ENTRY);
-		RedisCnxn redisCnxn = new RedisCnxn(jedis, entry, duration);
+		RedisCnxn redisCnxn = new RedisCnxn(jedis, entry, duration, IPTableName);
 		
 		redisCnxn.persistence();
 		collector.emit(new Values(entry));

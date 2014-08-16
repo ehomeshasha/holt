@@ -84,7 +84,7 @@ public class RedisDataTest {
 		while((line = br.readLine()) != null) {
 			ApacheLogEntry entry = new ApacheLogEntry(line);
 			entry.parseLogText();
-			RedisCnxn redisCnxn = new RedisCnxn(jedis, entry, duration);
+			RedisCnxn redisCnxn = new RedisCnxn(jedis, entry, duration, "");
 			redisCnxn.persistence();
 			
 			

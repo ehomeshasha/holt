@@ -1,11 +1,13 @@
 package ca.dealsaccess.holt.redis;
 
 import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.lang.ArrayUtils;
 
 import redis.clients.jedis.Jedis;
 import ca.dealsaccess.holt.log.ApacheLogEntry;
 import ca.dealsaccess.holt.log.LogConstants;
-import ca.dealsaccess.holt.util.GsonUtils;
 
 public class RedisCnxn {
 
@@ -26,14 +28,13 @@ public class RedisCnxn {
 	
 	private static final String ONE = "1";
 	
-	public RedisCnxn(Jedis jedis) {
-		this.jedis = jedis;
-	}
+	private String IPTableName;
 
-	public RedisCnxn(Jedis jedis, ApacheLogEntry entry, String duration) {
+	public RedisCnxn(Jedis jedis, ApacheLogEntry entry, String duration, String IPTableName) {
 		this.jedis = jedis;
 		this.entry = entry;
 		this.duration = duration;
+		this.IPTableName = IPTableName;
 	}
 
 	private StringBuilder sb = new StringBuilder();
@@ -62,35 +63,39 @@ public class RedisCnxn {
 		String[] columnArray = ((ApacheLogEntry) entry).getIPNoneExistsArray();
 		String rowKey = getRowKeyValue();
 		
+		boolean isExists = checkExists(rowKey);
+		
 		for(int i=0;i<LogConstants.LOG_COLUMNS.length;i++) {
 			String innerKey = columnArray[i];
-			String key = sb.append(duration).append(delimiter).append(LogConstants.LOG_COLUMNS[i]).append(delimiter).append(rowKey).toString();
+			String key = sb.append(duration).append(delimiter).append(rowKey).append(delimiter).append(LogConstants.LOG_COLUMNS[i]).toString();
 			sb.setLength(0);
 			Map<String, String> dataMap = jedis.hgetAll(key);
+			
+			boolean notCount = ArrayUtils.contains(LogConstants.LOG_EXISTS_COLUMNS, LogConstants.LOG_COLUMNS[i]);
+			
 			if(!dataMap.containsKey(innerKey)) {
 				dataMap.put(innerKey, ONE);
 			} else {
-				dataMap.put(innerKey, Integer.valueOf((Integer.parseInt(dataMap.get(innerKey))+1)).toString());
+				if(!notCount || !isExists) {
+					dataMap.put(innerKey, Integer.valueOf((Integer.parseInt(dataMap.get(innerKey))+1)).toString());
+				}
 			}
 			jedis.hmset(key, dataMap);
 			
 			//GsonUtils.print(key, jedis.hgetAll(key));
 		}
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
 	}
-	
-	
-	
+
+
+	private boolean checkExists(String rowKey) {
+		String key = sb.append(IPTableName).append(delimiter).append(rowKey).toString();
+		sb.setLength(0);
+		Set<String> hkeys = jedis.hkeys(key);
+		if(hkeys.contains(entry.getIp())) {
+			return true;
+		} else {
+			jedis.hset(key, entry.getIp(), "exists");
+			return false;
+		}
+	}
 }
