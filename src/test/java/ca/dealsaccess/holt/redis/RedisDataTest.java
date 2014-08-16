@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import backtype.storm.tuple.Values;
@@ -29,11 +30,15 @@ public class RedisDataTest {
 	
 	private static final String key = "access-log";
 	
+	@Before
+	public void init(){
+		jedis = new Jedis(redisHost, redisPort);
+		jedis.connect();
+	}
+
 	@Test
 	public void fetchListbyKey() {
 		
-		jedis = new Jedis(redisHost, redisPort);
-		jedis.connect();
 		//jedis.flushAll();
 		long len = jedis.llen(key);
 		List<String> list = jedis.lrange(key, 0, len);
@@ -45,14 +50,8 @@ public class RedisDataTest {
 		
 	}
 	
-	
-	
-	
-	
 	@Test
-	public void writeTestLogToRedis() throws IOException {
-		jedis = new Jedis(redisHost, redisPort);
-		jedis.connect();
+	public void writeLogs() throws IOException {
 		
 		BufferedReader br = new BufferedReader(new FileReader("test.log"));
 		String line = null;
@@ -66,6 +65,7 @@ public class RedisDataTest {
 		br.close();
 		jedis.disconnect();
 	}
+	
 	@Test
 	public void printResults() {
 		for(String duration : LogConstants.LOG_DURATION) {
@@ -75,9 +75,6 @@ public class RedisDataTest {
 	
 	@Test
 	public void persistenceMinuteALL() throws IOException {
-		jedis = new Jedis(redisHost, redisPort);
-		jedis.connect();
-		
 		
 		String duration = "Minute";
 		
@@ -87,36 +84,17 @@ public class RedisDataTest {
 		while((line = br.readLine()) != null) {
 			ApacheLogEntry entry = new ApacheLogEntry(line);
 			entry.parseLogText();
-			RedisCnxn redisCnxn = new RedisCnxn(jedis, entry, duration, null, null);
+			RedisCnxn redisCnxn = new RedisCnxn(jedis, entry, duration);
 			redisCnxn.persistence();
 			
 			
 			
 		}
-		
 		printDataMap(duration);
-		
-		
 		br.close();
 		jedis.disconnect();
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
 	}
-
-
-
-
+	
 	private StringBuilder sb = new StringBuilder();
 	
 	private static final String delimiter = "$#$";
@@ -126,31 +104,15 @@ public class RedisDataTest {
 	private void printDataMap(String duration) {
 		Map<String, Map<String, String>> map = new HashMap<String, Map<String, String>>();
 		for(int i=0;i<LogConstants.LOG_COLUMNS.length;i++) {
-			if(!LogConstants.LOG_COLUMNS[i].equals("Method")) {
-				continue;
-			}
 			String key = sb.append(duration).append(delimiter).append(LogConstants.LOG_COLUMNS[i]).toString();
 			sb.setLength(0);
 			System.out.println(key);
-			Map<String, String> dataMap = jedis.hgetAll(key);
+			Map<String, String> dataMap = 
+					jedis.hgetAll(key);
 			map.put(key, dataMap);
 			
 			
 		}
 		GsonUtils.print(map);
-		
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 }
