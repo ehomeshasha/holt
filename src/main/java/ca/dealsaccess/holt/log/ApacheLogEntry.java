@@ -21,27 +21,55 @@ public class ApacheLogEntry extends AbstractLogEntry {
 	
 	private static final String CITY_KEY = "city";
 	
+	private static final String JSON = "json";
+	
+	private static final String DEFAULT_FORMAT = JSON;
+	
 	public ApacheLogEntry() {
 		
 	}
 	
 	public ApacheLogEntry(String logText) {
-		super(logText);
+		this(logText, DEFAULT_FORMAT);
 	}
+	
+	public ApacheLogEntry(String logText, String logFormat) {
+		super(logText, logFormat);
+	}
+	
 
 	@Override
 	public void parseLogText() {
-		try {
-			String tmpStr = logText;
-			tmpStr = parseDate(tmpStr);
-			tmpStr = parseUrl(tmpStr);
-			parseOthers(tmpStr);
-		} catch (LogEntryException e) {
-			LOG.warn(e.getMessage());
-		} catch (ParseException e) {
-			LOG.warn(e.getClass().getName()+": "+e.getMessage());
-		} catch (Exception e) {
-			LOG.warn(e.getClass().getName()+": "+e.getMessage());
+		
+		if(logFormat.equals(JSON)) {
+			
+			AbstractParser parser = new JsonParser(logText);
+			parser.parse();
+			ip = parser.getIp();
+			findLocationbyIP();
+			statusCode = parser.getStatusCode();
+			responseSize = parser.getResponseSize();
+			method = parser.getMethod();
+			url = parser.getUrl();
+			protocol = parser.getProtocol();
+			extension = getExtensionbyUrl(url);
+			date = parser.getDate();
+			timestamp = parser.getTimestamp();
+			timezone = parser.getTimezone();
+			
+		} else {
+			try {
+				String tmpStr = logText;
+				tmpStr = parseDate(tmpStr);
+				tmpStr = parseUrl(tmpStr);
+				parseOthers(tmpStr);
+			} catch (LogEntryException e) {
+				LOG.warn(e.getMessage());
+			} catch (ParseException e) {
+				LOG.warn(e.getClass().getName()+": "+e.getMessage());
+			} catch (Exception e) {
+				LOG.warn(e.getClass().getName()+": "+e.getMessage());
+			}
 		}
 	}
 	

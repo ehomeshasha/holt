@@ -1,4 +1,4 @@
-package ca.dealsaccess.holt.storm.bolt.duration;
+/*package ca.dealsaccess.holt.storm.bolt.duration;
 
 import java.util.Map;
 
@@ -62,3 +62,4 @@ public class IPExistsLogStatsMinuteBolt extends BaseRichBolt {
 	}
 
 }
+*/

@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import redis.clients.jedis.Jedis;
-import ca.dealsaccess.holt.astyanax.LogStatsColumnFamily;
+//import ca.dealsaccess.holt.astyanax.LogStatsColumnFamily;
 import ca.dealsaccess.holt.common.RedisConstants;
 import ca.dealsaccess.holt.log.ApacheLogEntry;
 import ca.dealsaccess.holt.log.LogConstants;
@@ -21,6 +21,8 @@ import backtype.storm.tuple.Values;
 
 @SuppressWarnings("serial")
 public class LogStatsRedisBolt extends BaseRichBolt {
+	
+	public static final String IP_TABLE = "IP_TABLE";
 
 	public static Logger LOG = LoggerFactory.getLogger(LogStatsRedisBolt.class);
 	
@@ -53,7 +55,7 @@ public class LogStatsRedisBolt extends BaseRichBolt {
         jedis = new Jedis(host, port);
 		jedis.connect();
 		
-		IPTableName = LogStatsColumnFamily.IP_TABLE+"_"+duration;
+		IPTableName = IP_TABLE+"_"+duration;
 	}
 
 	@Override

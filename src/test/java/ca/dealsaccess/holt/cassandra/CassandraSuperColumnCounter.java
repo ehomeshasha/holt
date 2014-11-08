@@ -1,4 +1,4 @@
-package ca.dealsaccess.holt.cassandra;
+/*package ca.dealsaccess.holt.cassandra;
 
 import java.util.Map;
 
@@ -68,3 +68,4 @@ private CassandraConfig config;
 		context.shutdown();
 	}
 }
+*/

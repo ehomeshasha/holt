@@ -13,8 +13,8 @@ import storm.trident.Stream;
 import storm.trident.TridentTopology;
 
 import com.esotericsoftware.kryo.serializers.FieldSerializer;
-import com.hmsonline.storm.cassandra.StormCassandraConstants;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+//import com.hmsonline.storm.cassandra.StormCassandraConstants;
+//import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
@@ -25,7 +25,7 @@ import backtype.storm.generated.StormTopology;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
 import backtype.storm.utils.Utils;
-import ca.dealsaccess.holt.astyanax.AstyanaxCnxn;
+//import ca.dealsaccess.holt.astyanax.AstyanaxCnxn;
 import ca.dealsaccess.holt.common.AbstractConfig.ConfigException;
 import ca.dealsaccess.holt.common.AbstractStormJob;
 import ca.dealsaccess.holt.common.RedisConstants;
@@ -36,7 +36,7 @@ import ca.dealsaccess.holt.storm.spout.RedisFixedBatchSpout;
 import ca.dealsaccess.holt.storm.spout.RedisLPOPFixedBatchSpout;
 import ca.dealsaccess.holt.storm.bolt.IndexerBolt;
 import ca.dealsaccess.holt.storm.bolt.LogRulesBolt;
-import ca.dealsaccess.holt.storm.bolt.LogStatsBolt;
+//import ca.dealsaccess.holt.storm.bolt.LogStatsBolt;
 import ca.dealsaccess.holt.storm.bolt.LogStatsRedisBolt;
 import ca.dealsaccess.holt.storm.spout.RedisSpout;
 import ca.dealsaccess.holt.trident.function.IndexerFunction;
@@ -64,7 +64,7 @@ public final class LogStatsJob extends AbstractStormJob {
 	
 	private LocalCluster cluster;
 	
-	private AstyanaxCnxn astyanaxCnxn;
+	//private AstyanaxCnxn astyanaxCnxn;
 	
 	private static final String LOGSTATS = "LogStats";
 	
@@ -78,9 +78,9 @@ public final class LogStatsJob extends AbstractStormJob {
 		LogStatsJob main = new LogStatsJob();
 		try {
 			main.initializeAndRun(args);
-		} catch (ConnectionException e) {
-			LOG.error("Unexpected ConnectionException, exiting abnormally,", e);
-			System.exit(2);
+		//} catch (ConnectionException e) {
+		//	LOG.error("Unexpected ConnectionException, exiting abnormally,", e);
+		//	System.exit(2);
 		} catch (ConfigException e) {
 			LOG.error("Unexpected ConfigException, exiting abnormally,", e);
 			System.exit(2);
@@ -99,7 +99,7 @@ public final class LogStatsJob extends AbstractStormJob {
 	}
 
 	private void initializeAndRun(String[] args) throws ConfigException, AlreadyAliveException, InvalidTopologyException,
-			InterruptedException, IOException, ConnectionException, SQLException {
+			InterruptedException, IOException, SQLException {
 		LOG.info("Program start on " + this.getClass().getName());
 		initialize(args);
 		run();
@@ -118,7 +118,7 @@ public final class LogStatsJob extends AbstractStormJob {
 		}
 	}
 	
-	private void initialize(String[] args) throws ConfigException, IOException, ConnectionException, SQLException {
+	private void initialize(String[] args) throws ConfigException, IOException,SQLException {
 		addOptions();
 		if (parseArguments(args) == null) {
 			return;
@@ -145,10 +145,10 @@ public final class LogStatsJob extends AbstractStormJob {
 		addOption("redisKey", "rk", "the key of redis list", true);
 		addFlag("trident", "tr", "whether using trident topology");
 		addFlag("local", "l", "whether runing on local model or on cluster");
-		addOption("persistence", "p", "data persistence storage", "redis");
+		//addOption("persistence", "p", "data persistence storage", "redis");
 	}
 
-	private void createBuilder() throws ConnectionException, ConfigException, SQLException {
+	private void createBuilder() throws ConfigException, SQLException {
 		builder = new TopologyBuilder();
 
 		// -o LOG_TEXT: {String}
@@ -160,7 +160,7 @@ public final class LogStatsJob extends AbstractStormJob {
 		// -i [LOG_ENTRY: {ApacheLogEntry}] -o [LOG_ENTRY: {ApacheLogEntry}, LOG_INDEX_ID: {String}]
 		builder.setBolt("indexerBolt", new IndexerBolt(), 1).shuffleGrouping("logRules");
 
-		if(getOption("persistence").equals("redis")) {
+		//if(getOption("persistence").equals("redis")) {
 			//setupMySQL();
 			
 			
@@ -174,7 +174,7 @@ public final class LogStatsJob extends AbstractStormJob {
 			
 			
 			
-			
+		/*	
 		} else if(getOption("persistence").equals("cassandra")) {
 			setupCassandra();
 			
@@ -186,7 +186,7 @@ public final class LogStatsJob extends AbstractStormJob {
 			}
 			
 		}
-		
+		*/
 		
 		
 		
@@ -198,12 +198,12 @@ public final class LogStatsJob extends AbstractStormJob {
 	//	mysqlClient.createLogStatsTableIfnotExists();
 	//}
 
-	private void buildTopology() throws ConfigException, ConnectionException, SQLException {
+	private void buildTopology() throws ConfigException, SQLException {
 		createBuilder();
 		topology = builder.createTopology();
 	}
 	
-	private void createTridentTopology() throws ConfigException, ConnectionException {
+	private void createTridentTopology() throws ConfigException {
 		RedisFixedBatchSpout redisTridentSpout = new RedisLPOPFixedBatchSpout(new Fields(LogConstants.LOG_TEXT), 5);
 		
 		tridentTopology = new TridentTopology();
@@ -238,11 +238,11 @@ public final class LogStatsJob extends AbstractStormJob {
 	}
 	
 
-	private void buildTridentTopology() throws ConfigException, ConnectionException {
+	private void buildTridentTopology() throws ConfigException {
 		createTridentTopology();
 		topology = tridentTopology.build();
 	}
-	
+	/*
 	private void setupCassandra() throws ConfigException, ConnectionException {
 		astyanaxCnxn = new AstyanaxCnxn();
 		astyanaxCnxn.connect();
@@ -264,7 +264,7 @@ public final class LogStatsJob extends AbstractStormJob {
 		conf.put(AstyanaxCnxn.CASSANDRA_CONFIG_KEY, cassandraConfig);
 		
 	}
-	
+	*/
 	/*
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	private CassandraCounterBatchingBolt buildCassandraMinuteBolt() throws ConnectionException, ConfigException {

@@ -1,4 +1,4 @@
-package ca.dealsaccess.holt.log;
+/*package ca.dealsaccess.holt.log;
 
 import java.util.Map;
 
@@ -66,3 +66,4 @@ public class ApacheLogStats extends AbstractLogStats {
 		
 	}
 }
+*/

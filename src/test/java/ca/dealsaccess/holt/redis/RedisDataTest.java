@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import backtype.storm.tuple.Values;
 
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+//import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import ca.dealsaccess.holt.log.ApacheLogEntry;
 import ca.dealsaccess.holt.log.LogConstants;

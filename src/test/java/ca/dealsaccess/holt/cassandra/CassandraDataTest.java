@@ -1,4 +1,4 @@
-package ca.dealsaccess.holt.cassandra;
+/*package ca.dealsaccess.holt.cassandra;
 
 
 import java.io.File;
@@ -173,11 +173,11 @@ public class CassandraDataTest {
 	
 	@Test
 	public void incrementTest() throws ConnectionException {
-		/*
+		
 		MutationBatch m = keyspace.prepareMutationBatch();
 		m.withRow(CF_COUNTER1, 1386520005L).incrementCounterColumn("arr1", 1);
 		m.execute();
-		*/
+		
 		keyspace.prepareColumnMutation(CF_COUNTER1, "1386520005", "CounterColumn1")
 	    .incrementCounterColumn(1)
 	    .execute();
@@ -333,3 +333,4 @@ public class CassandraDataTest {
 	
 	
 }
+*/

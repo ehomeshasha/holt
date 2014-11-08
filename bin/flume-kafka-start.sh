@@ -3,7 +3,7 @@
 #examples
 #bin/flume-kafka-start.sh grouplens-ml-100k 'cat /home/hadoop-user/scout_workspace/holt/src/test/resources/grouplens-ml-100k/ua.base'
 #bin/flume-kafka-start.sh test-log2 'tail -f -n +1 /home/hadoop-user/scout_workspace/holt/test.log'
-#bin/flume-kafka-start.sh access-log 'tail -f --lines=1 /var/log/httpd/access_log'
+#bin/flume-kafka-start.sh access-log 'tail -f --lines=1 /var/www/vhosts/u17892083.onlinehome-server.com/htdocs/vlife/data/log/access.log'
 
 if [[ "x$1" = "x" || "x$2" = "x" ]];then
 	echo "usage: holt-task-start.sh <kafkatopic> <exec-command>"

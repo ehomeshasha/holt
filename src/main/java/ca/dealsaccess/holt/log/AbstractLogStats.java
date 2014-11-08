@@ -1,4 +1,4 @@
-package ca.dealsaccess.holt.log;
+/*package ca.dealsaccess.holt.log;
 
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
@@ -90,3 +90,4 @@ public abstract class AbstractLogStats {
 	
 
 }
+*/

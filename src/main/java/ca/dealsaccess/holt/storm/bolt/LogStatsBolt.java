@@ -1,4 +1,4 @@
-package ca.dealsaccess.holt.storm.bolt;
+/*package ca.dealsaccess.holt.storm.bolt;
 
 import java.util.Map;
 
@@ -105,3 +105,4 @@ public class LogStatsBolt extends BaseRichBolt {
 	}
 
 }
+*/

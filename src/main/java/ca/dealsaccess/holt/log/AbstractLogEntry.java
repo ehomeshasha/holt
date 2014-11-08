@@ -40,6 +40,8 @@ public abstract class AbstractLogEntry {
 	protected String city = EMPTY;
 	
 	protected boolean existed = true;
+
+	protected String logFormat;
 	
 	protected static final Pattern whiteSpace = Pattern.compile("\\s+");
 	
@@ -49,8 +51,11 @@ public abstract class AbstractLogEntry {
 	
 	protected static final Pattern urlPattern = Pattern.compile("\"([^\\s]+)\\s([^\\s]+)\\s([^\\s]+)\"");
 	
-	public AbstractLogEntry(String logText) {
+	
+	
+	public AbstractLogEntry(String logText, String logFormat) {
 		this.logText = logText;
+		this.logFormat = logFormat;
 	}
 	
 	public AbstractLogEntry() {

@@ -1,4 +1,4 @@
-package ca.dealsaccess.holt.astyanax;
+/*package ca.dealsaccess.holt.astyanax;
 
 import ca.dealsaccess.holt.log.LogConstants;
 
@@ -47,3 +47,4 @@ public class LogStatsColumnFamily {
 	}
 
 }
+*/
